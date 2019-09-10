@@ -18,13 +18,15 @@ import random
 class TestScripts:
 
     handler = ErrorHandler()
-    item = SelectItem()
+    auto = SelectItem()
 
-    # 330i design
+    # 330i Design
     def Test_A01(self):
         try:
             print("Beginning Test Case A01")
-            self.item.get_to_build("330i")
+            self.auto.select_model(0)
+            self.auto.select_design_330i(1)
+            self.auto.select_color_330i(7)
         except Exception as err:
             self.handler.error_message("A01", err)
 

@@ -47,75 +47,106 @@ class SelectItem:
         print("Front End: %s" % frontendPerformance_calc)
         return
 
-    def get_to_build(self, model):
+
+    def select_model(self, model):
         try:
             self.driver.get("https://www.bmwusa.com/build-your-own.html#/series/3/sedan")
 
-            if model == "330i":
-                Button330i = self.wait.until(ec.element_to_be_clickable((By.XPATH, "//a[@title='2020 BMW 330i Sedan']")))
-                Button330i.click()
-            elif model == "330i xDrive":
-                print("330i xDrive selected.")
-            elif model == "M340i":
-                print(model)
-            elif model == "M340i xDrive":
-                print("M340i xDrive selected.")
-            else:
-                print("Invalid model")
+            models = {
+                0: "//a[@title='2020 BMW 330i Sedan']",
+                1: "//a[@title='2020 BMW 330i xDrive Sedan']",
+                2: "//a[@title='2020 BMW M340i Sedan']",
+                3: "//a[@title='2020 BMW M340i xDrive Sedan']"
+            }
+            self.loadtime()
+
+            button = self.wait.until(
+                ec.element_to_be_clickable((By.XPATH, models.get(model, "invalid index"))))
+            button.click()
+            print("Model selected. Index: " + str(model))
+
         except Exception as err:
+            print(str(err))
             self.replug(model)
 
     # are you "unplugged" from the config? replug!
     def replug(self, model):
-        self.get_to_build(model)
+        self.select_model(model)
 
-
-'''
-begin _ItemSelectorClass:
-    define class variables here
-    ex: driver = webdriver, wait = WebDriverWait
-
-    define initialization method(self):
-        initialize class variables
-        ex. self.driver = webdriver.Chrome(chromepath)
-
-    define ItemSelection BUTTON method(self):
-        TRY:
-            use explicit wait to find the element
-            then click using an action chain
-            print success message
-        EXCEPT:
-            print error message
-
-    define ItemSelection SELECT method(self, index): < index arg lets you select a choice from outside the class
+    # select Design - 330i
+    def select_design_330i(self, index):
         try:
-            use explicit wait to find the element
-            select the index that is passed as an argument
-            print success message
-        except:
-            print error message
+            self.loadtime()
 
-    define ItemSelection RADIO method(self, index)
+            designs = {
+                0: "//div[@title='Sport Line']",
+                1: "//div[@title='Luxury']",
+                2: "//div[@title='M Sport']"
+            }
+
+            design = self.wait.until(
+                ec.element_to_be_clickable((By.XPATH, designs.get(index, "invalid index")))
+            )
+            design.click()
+            print("Design selected. Index: " + str(index))
+            self.next_page()
+            self.confirm_change()
+        except Exception as err:
+            self.handler.error_message("330i - design", err)
+
+    def select_color_330i(self, index):
         try:
-            create an if-else statement that selects the radio button based on the index (case-switch works too, probably better)
-            i.e.
-            if index == 0
-                choose radio button option 0 (you will likely need to find this element via label)
-                explicit wait doesnt always work here, might have to use a time.sleep
-            else if index == 1
-                same thing but next label
-            else if index == 2
-                same thing but next label
 
-            print success message
-        except:
-            print error message
+            colors = {
+                0: "//div[@title='Alpine White']",
+                1: "//div[@title='Jet Black']",
+                2: "//div[@title='Black Sapphire Metallic']",
+                3: "//div[@title='Melbourne Red Metallic']",
+                4: "//div[@title='Glacier Silver Metallic']",
+                5: "//div[@title='Mineral White Metallic']",
+                6: "//div[@title='Mineral Grey Metallic']",
+                7: "//div[@title='Mediterranean Blue Metallic']",
+                8: "//div[@title='Sunset Orange Metallic']",
+                9: "//div[@title='Vermont Bronze Metallic']",
+                10: "//div[@title='Portimao Blue Metallic']",
+                11: "//div[@title='Blue Ridge Mountain Metallic']"
+            }
 
-    define ItemSelection INPUT method(self, text)
+            self.loadtime()
+            self.close_zip()
+            time.sleep(2)
+            color = self.driver.find_element_by_xpath(colors.get(index, "invalid index"))
+            self.driver.execute_script("arguments[0].scrollIntoView();", color)
+            time.sleep(2)
+            color.click()
+            self.confirm_change()
+            print("Color selected. Index: " + str(index))
+        except Exception as err:
+            self.handler.error_message("color selection", err)
+
+    def next_page(self):
         try:
-            use explicit wait to find the input element
-            use an action chain to click the element, then sendkeys "text"
-            print success message
-        except:
-            print error message
-'''
+            next = self.wait.until(
+                ec.element_to_be_clickable((By.CLASS_NAME, "button-next.byo-core-type.label-1.theme-core"))
+            )
+            next.click()
+        except Exception as err:
+            self.handler.error_message("moving to next page", err)
+
+    def confirm_change(self):
+        try:
+            time.sleep(3)
+            confirm = self.driver.find_element_by_xpath("//button[@name='confirm-button']")
+            confirm.click()
+            print("change confirmed!")
+        except Exception as err:
+            self.handler.error_message("no changes to confirm", err)
+
+    # closes zipcode window - can cause click intercepts if open
+    def close_zip(self):
+        try:
+            time.sleep(2)
+            close = self.driver.find_element_by_xpath("//button[@aria-label='Close Zipcode Modal']")
+            close.click()
+        except Exception as err:
+            self.handler.error_message("closing zip modal", err)
