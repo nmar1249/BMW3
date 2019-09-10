@@ -27,6 +27,11 @@ class TestScripts:
             self.auto.select_model(0)
             self.auto.select_design_330i(1)
             self.auto.select_color_330i(7)
+            self.auto.select_wheels_330i(2)
+            self.auto.select_upholstery_330i(7)
+            self.auto.select_trim_330i(3)
+            self.auto.select_featured_package_330i(2)
+            self.auto.select_additional_packages_330i(2)
         except Exception as err:
             self.handler.error_message("A01", err)
 
