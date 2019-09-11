@@ -20,24 +20,34 @@ class TestScripts:
     handler = ErrorHandler()
     auto = SelectItem()
 
-    # 330i Design
+    # 330i sandbox flow
     def Test_A01(self):
         try:
             print("Beginning Test Case A01")
-            self.auto.select_model(0)
+            self.auto.select_model(1)
             self.auto.select_design_330i(1)
-            self.auto.select_color_330i(7)
-            self.auto.select_wheels_330i(2)
+            self.auto.select_color(7)
+            self.auto.select_wheels(2)
             self.auto.select_upholstery_330i(7)
             self.auto.select_trim_330i(3)
-            self.auto.select_featured_package_330i(2)
-            self.auto.select_additional_packages_330i(2)
+            self.auto.select_featured_package_330i(1)
+            self.auto.select_additional_packages_330i(0)
+            self.auto.select_all_options_330i(7, True)
+            self.auto.select_accessories_330i(0, True)
         except Exception as err:
             self.handler.error_message("A01", err)
 
+    # M340i sandbox flow
+    def Test_B01(self):
+        try:
+            print("Beginning Test Case B01")
+            self.auto.select_model(2)
+            self.auto.select_color(4)
+            self.auto.select_wheels(9)
+        except Exception as err:
+            self.handler.error_message("B01", err)
 
 '''
-begin _TestScripts:
 
     define class variables
     (it should just be TestModule defined as ItemSelectorClass)
