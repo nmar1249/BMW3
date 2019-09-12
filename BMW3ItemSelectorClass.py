@@ -32,10 +32,23 @@ class SelectItem:
     wait = WebDriverWait
     handler = ErrorHandler
     model = ""
+
+    changeConfirmed = False
+
+    startingPrice = {
+        0: 40750,           # 330i
+        1: 42750,           # 330i xDrive
+        2: 54000,           # M340i
+        3: 56000            # M340i xDrive
+    }
+
+    total = int
+
     def __init__(self):
         self.driver = webdriver.Chrome(r"C:\drivers\chromedriver.exe")
         self.wait = WebDriverWait(self.driver, 5)
         self.handler = ErrorHandler()
+        self.total = 0
 
     def loadtime(self):
         navigationStart = self.driver.execute_script("return window.performance.timing.navigationStart")
@@ -65,8 +78,10 @@ class SelectItem:
                 ec.element_to_be_clickable((By.XPATH, models.get(index, "invalid index"))))
             button.click()
             self.model = index
-            print("Model selected. Index: " + str(index))
 
+            self.total = self.startingPrice.get(index, "invalid index")
+            print("Model selected. Index: " + str(index))
+            self.check_total()
         except Exception as err:
             print(str(err))
             self.replug(index)
@@ -76,23 +91,31 @@ class SelectItem:
         self.select_model(model)
 
     # select Design - 330i
+    # there is no design option for M340i
     def select_design_330i(self, index):
         try:
             self.loadtime()
 
             designs = {
-                0: "//div[@title='Sport Line']",
-                1: "//div[@title='Luxury']",
-                2: "//div[@title='M Sport']"
+                0: "//div[@data-index='0']",
+                1: "//div[@data-index='1']",
+                2: "//div[@data-index='2']"
             }
 
-            design = self.wait.until(
-                ec.element_to_be_clickable((By.XPATH, designs.get(index, "invalid index")))
-            )
+            self.changeConfirmed = False
+            time.sleep(2)
+            design = self.driver.find_element_by_xpath(designs.get(index, "invalid index"))
+            data = design.find_element_by_class_name("byo-rail-option")
+            price = data.get_attribute("listprice")
             design.click()
             print("Design selected. Index: " + str(index))
             self.next_page()
             self.confirm_change()
+
+            if self.changeConfirmed == False:
+                self.total = self.total + int(price)
+
+            self.check_total()
         except Exception as err:
             self.handler.error_message("330i - design", err)
 
@@ -125,23 +148,34 @@ class SelectItem:
                 7: "//div[@title='Tanzanite Blue II Metallic"
             }
 
+            self.changeConfirmed = False
             self.loadtime()
             self.close_zip()
             time.sleep(2)
 
+            price = 0
             # determine model
             if self.model == 0 or self.model == 1:
                 color = self.driver.find_element_by_xpath(colors_330i.get(index, "invalid index"))
                 self.driver.execute_script("arguments[0].scrollIntoView();", color)             # GET ELEMENT INTO VIEW
+                data = color.find_element_by_class_name("byo-rail-option")
+                price = data.get_attribute("listprice")
                 time.sleep(2)
                 color.click()
             elif self.model == 2 or self.model == 3:
                 color = self.driver.find_element_by_xpath(colors_M340i.get(index, "invalid index"))
                 self.driver.execute_script("arguments[0].scrollIntoView();", color)  # GET ELEMENT INTO VIEW
+                data = color.find_element_by_class_name("byo-rail-option")
+                price = data.get_attribute("listprice")
                 time.sleep(2)
                 color.click()
 
             self.confirm_change()
+            if self.changeConfirmed == False:
+                self.total = self.total + int(price)
+
+
+            self.check_total()
             self.next_page()
             print("Color selected. Index: " + str(index))
         except Exception as err:
@@ -178,28 +212,37 @@ class SelectItem:
             self.loadtime()
             time.sleep(2)
 
+            price = 0
             if self.model == 0 or self.model == 1:
                 wheel = self.driver.find_element_by_xpath(wheels_330i.get(index, "invalid index"))
                 self.driver.execute_script("arguments[0].scrollIntoView();", wheel)
+                data = wheel.find_element_by_class_name("byo-rail-option")
+                price = data.get_attribute("listprice")
                 time.sleep(2)
                 wheel.click()
             elif self.model == 2 or self.model == 3:
                 wheel = self.driver.find_element_by_xpath(wheels_M340i.get(index, "invalid index"))
                 self.driver.execute_script("arguments[0].scrollIntoView();", wheel)
+                data = wheel.find_element_by_class_name("byo-rail-option")
+                price = data.get_attribute("listprice")
                 time.sleep(2)
                 wheel.click()
 
             print("selected wheel. index: " + str(index))
             self.confirm_change()
+
+            if self.changeConfirmed == False:
+                self.total = self.total + int(price)
+
+            self.check_total()
             self.next_page()
         except Exception as err:
             self.handler.error_message("error selecting wheels", err)
 
-    #TODO modify these to support M340i models
-    def select_upholstery_330i(self, index):
+    def select_upholstery(self, index):
         try:
 
-            uph_list = {
+            uph_list_330i = {
                 0: "//div[@title='Canberra Beige SensaTec']",
                 1: "//div[@title='Black SensaTec']",
                 2: "//div[@title='Canberra Beige/Black Vernasca Leather with contrast stitching']",
@@ -211,19 +254,48 @@ class SelectItem:
                 8: "//div[@title='Cognac Vernasca Leather with contrast stitching']"
             }
 
+            uph_list_M340i = {
+                1: "//div[@title='Black SensaTec']",
+                2: "//div[@title='Black Vernasca Leather with contrast stitching']",
+                3: "//div[@title='Mocha Vernasca Leather with contrast stitching']",
+                4: "//div[@title='Black Vernasca Leather with Blue contrast stitching']",
+                5: "//div[@title='Oyster Vernasca Leather with contrast stitching']",
+                6: "//div[@title='Cognac Vernasca Leather with contrast stitching']"
+            }
+
+            self.changeConfirmed = False
             self.loadtime()
             time.sleep(2)
-            uph = self.driver.find_element_by_xpath(uph_list.get(index, "invalid index"))
-            self.driver.execute_script("arguments[0].scrollIntoView();", uph)
-            time.sleep(2)
-            uph.click()
+
+            price = 0
+            if self.model == 0 or self.model == 1:
+                uph = self.driver.find_element_by_xpath(uph_list_330i.get(index, "invalid index"))
+                self.driver.execute_script("arguments[0].scrollIntoView();", uph)
+                data = uph.find_element_by_class_name("byo-rail-option")
+                price = data.get_attribute("listprice")
+                time.sleep(2)
+                uph.click()
+            elif self.model == 2 or self.model == 3:
+                uph = self.driver.find_element_by_xpath(uph_list_M340i.get(index, "invalid index"))
+                self.driver.execute_script("arguments[0].scrollIntoView();", uph)
+                data = uph.find_element_by_class_name("byo-rail-option")
+                price = data.get_attribute("listprice")
+                time.sleep(2)
+                uph.click()
+
             print("selected upholstery. index: " + str(index))
             self.confirm_change()
+
+            if self.changeConfirmed == False:
+                self.total = self.total + int(price)
+
+            self.check_total()
             self.next_page()
         except Exception as err:
             self.handler.error_message("error selecting upholstery", err)
 
-    def select_trim_330i(self, index):
+    # same for 330i and M340i
+    def select_trim(self, index):
         try:
             trims = {
                 0: "//div[@data-index='0']",        # Open pore fine wood oak grain
@@ -233,31 +305,52 @@ class SelectItem:
                 4: "//div[@data-index='4']"         # aluminum - mesh effect
             }
 
+            self.changeConfirmed = False
             self.loadtime()
             time.sleep(2)
             trim = self.driver.find_element_by_xpath(trims.get(index, "invalid index"))
             self.driver.execute_script("arguments[0].scrollIntoView();", trim)
+            data = trim.find_element_by_class_name("byo-rail-option")
+            price = data.get_attribute("listprice")
             time.sleep(2)
             trim.click()
             print("selected trim. index: " + str(index))
             self.confirm_change()
+
+            if self.changeConfirmed == False:
+                self.total = self.total + int(price)
+
+            self.check_total()
             self.next_page()
         except Exception as err:
             self.handler.error_message("error selecting trim", err)
 
-    def select_featured_package_330i(self, index):
+    def select_featured_package(self, index):
         try:
-            f_packages = {
+            f_packages_330i = {
                 0: "//img[@alt='Convenience Package']",
                 1: "//img[@alt='Premium Package']",
                 2: "//img[@alt='Executive Package']"
             }
 
+            f_packages_M340i = {
+                0: "//img[@alt='Premium Package']",
+                1: "//img[@alt='Executive Package']"
+            }
+
+            self.changeConfirmed = False
             self.loadtime()
             time.sleep(2)
-            f_package = self.driver.find_element_by_xpath(f_packages.get(index, "invalid index"))
-            time.sleep(2)
-            f_package.click()
+            if self.model == 0 or self.model == 1:
+                f_package = self.driver.find_element_by_xpath(f_packages_330i.get(index, "invalid index"))
+                time.sleep(2)
+                f_package.click()
+            elif self.model == 2 or self.model == 3:
+                f_package = self.driver.find_element_by_xpath(f_packages_M340i.get(index, "invalid index"))
+                time.sleep(2)
+                f_package.click()
+
+            price = self.driver.find_element_by_class_name("package-modal__price.theme-core.byo-core-type.headline-6")
             time.sleep(2)
             addtobuild = self.driver.find_element_by_class_name(
                 "package-modal__selected-btn.theme-core.byo-core-type.headline-6")
@@ -265,26 +358,50 @@ class SelectItem:
             print("selected featured package. index: " + str(index))
             self.confirm_change()
 
+            if self.changeConfirmed == False:
+                self.total = self.total + int(''.join(c for c in price.text if c.isdigit()))
+
+            self.check_total()
         except Exception as err:
             self.handler.error_message("error selecting featured package", err)
 
-    def select_additional_packages_330i(self, index):
+    def select_additional_packages(self, index):
         try:
-            a_packages = {
+            a_packages_330i = {
                 0: "//button[contains(text(), 'Driving Assistance Package')]",
                 1: "//button[contains(text(), 'Driving Assistance Professional Package')]",
                 2: "//button[contains(text(), 'Parking Assistance Package')]",
                 3: "//button[contains(text(), 'Track Handling Package')]"
             }
 
+            a_packages_M340i = {
+                0: "//button[contains(text(), 'Driving Assistance Package')]",
+                1: "//button[contains(text(), 'Driving Assistance Professional Package')]",
+                2: "//button[contains(text(), 'Parking Assistance Package')]",
+                3: "//button[contains(text(), 'Cooling and High Performance Tire Package')]"
+            }
+
+            self.changeConfirmed = False
             self.loadtime()
             time.sleep(2)
-            a_package = self.driver.find_element_by_xpath(a_packages.get(index, "invalid index"))
-            self.driver.execute_script("arguments[0].scrollIntoView();", a_package)
-            time.sleep(2)
-            action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(Keys.UP).perform() # bring the element into view
-            time.sleep(3)
-            a_package.click()
+            if self.model == 0 or self.model == 1:
+                a_package = self.driver.find_element_by_xpath(a_packages_330i.get(index, "invalid index"))
+                self.driver.execute_script("arguments[0].scrollIntoView();", a_package)
+                time.sleep(2)
+                action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(Keys.UP).perform() # bring the element into view
+                time.sleep(3)
+                a_package.click()
+            elif self.model == 2 or self.model == 3:
+                a_package = self.driver.find_element_by_xpath(a_packages_M340i.get(index, "invalid index"))
+                self.driver.execute_script("arguments[0].scrollIntoView();", a_package)
+                time.sleep(2)
+                action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(
+                    Keys.UP).perform()  # bring the element into view
+                time.sleep(3)
+                a_package.click()
+
+            price = self.driver.find_element_by_class_name(
+                "package-modal__price.package-modal__price--add-pkg.theme-core.byo-core-type.headline-6")
             addtobuild = self.driver.find_element_by_class_name(
                 "package-modal__selected-btn.theme-core.byo-core-type.headline-6")
             addtobuild.click()
@@ -292,13 +409,17 @@ class SelectItem:
             print("Selected additional package. Index: " + str(index))
             self.confirm_change()
 
+            if self.changeConfirmed == False:
+                self.total = self.total + int(''.join(c for c in price.text if c.isdigit()))
+
+            self.check_total()
         except Exception as err:
             self.handler.error_message("error selecting additional package", err)
 
     # add is a boolean variable that determines whether an item is being added (true) or removed (false)
-    def select_all_options_330i(self, index, add):
+    def select_all_options(self, index, add):
         try:
-            options = {
+            options_330i = {
                 0: "//button[contains(text(), 'Space-saver spare')]",
                 1: "//button[contains(text(), 'Park Distance Control')]",
                 2: "//button[contains(text(), 'Remote Engine Start')]",
@@ -313,20 +434,48 @@ class SelectItem:
                 11: "//button[contains(text(), 'Adaptive M Suspension')]"
             }
 
+            options_M340i = {
+                0: "//button[contains(text(), 'Space-saver spare')]",
+                1: "//button[contains(text(), 'Park Distance Control')]",
+                2: "//button[contains(text(), 'Active Cruise Control')]",
+                3: "//button[contains(text(), 'Remote Engine Start')]",
+                4: "//button[contains(text(), 'Heated Steering Wheel')]",
+                5: "//button[contains(text(), 'Power tailgate')]",
+                6: "//button[contains(text(), 'Heated front seats')]",
+                7: "//button[contains(text(), 'Ambient Lighting')]",
+                8: "//button[contains(text(), 'Wireless Charging and WiFi Hotspot')]",
+                9: "//button[contains(text(), 'Harman Kardon surround sound system')]",
+                10: "//button[contains(text(), 'Adaptive M Suspension')]"
+            }
+
             self.loadtime()
-            option = self.wait.until(ec.element_to_be_clickable((By.XPATH, options.get(index, "invalid index"))))
-            self.driver.execute_script("arguments[0].scrollIntoView();", option)
-            action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(
-                Keys.UP).perform()  # bring the element into view
-            time.sleep(2)
-            option.click()
+
+            if self.model == 0 or self.model == 1:
+                option = self.wait.until(ec.element_to_be_clickable((By.XPATH, options_330i.get(index, "invalid index"))))
+                self.driver.execute_script("arguments[0].scrollIntoView();", option)
+                action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(
+                    Keys.UP).perform()  # bring the element into view
+                time.sleep(2)
+                option.click()
+            elif self.model == 2 or self.model == 3:
+                option = self.wait.until(
+                    ec.element_to_be_clickable((By.XPATH, options_M340i.get(index, "invalid index"))))
+                self.driver.execute_script("arguments[0].scrollIntoView();", option)
+                action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(
+                    Keys.UP).perform()  # bring the element into view
+                time.sleep(2)
+                option.click()
 
             if add == True:
+                price = self.driver.find_element_by_class_name(
+                    "detail-modal-price.theme-core.byo-core-type.headline-5")
                 addtobuild = self.wait.until(ec.element_to_be_clickable(
                     (By.CLASS_NAME, "detail-modal-button-add-item.cta-1" )
                 ))
                 addtobuild.click()
             else:
+                price = self.driver.find_element_by_class_name(
+                    "detail-modal-price.theme-core.byo-core-type.headline-5")
                 remove = self.wait.until(ec.element_to_be_clickable(
                     (By.CLASS_NAME, "detail-modal-button-addi-item.active.cta-1")
                 ))
@@ -337,22 +486,41 @@ class SelectItem:
             close.click()
             print("Selected options. index: " + str(index))
             self.confirm_change()
+
+            if self.changeConfirmed == False:
+                if add == True:
+                    self.total = self.total + int(''.join(c for c in price.text if c.isdigit()))
+                elif add == False:
+                    self.total = self.total - int(''.join(c for c in price.text if c.isdigit()))
+
+            self.check_total()
             self.next_page_dock()
 
         except Exception as err:
-            self.select_all_options_330i(index, False) # perhaps it needs to be removed, try that.
+            self.select_all_options(index, False) # perhaps it needs to be removed, try that.
             self.handler.error_message("error selecting options", err)
 
-    def select_accessories_330i(self, index, add):
+    def select_accessories(self, index, add):
         try:
-            accessories = {
+            accessories_330i = {
                 0: "//button[contains(text(), 'BMW Protective Rear Cover')]"
             }
 
+            accessories_M340i = {
+                0: "//button[contains(text(), 'BMW Protective Rear Cover')]",
+                1: "//button[contains(text(), 'BMW Loading Sill Mat')]"
+            }
+
             self.loadtime()
-            accessory = self.wait.until(ec.element_to_be_clickable((By.XPATH, accessories.get(index, "invalid index"))))
-            time.sleep(2)
-            accessory.click()
+
+            if self.model == 0 or self.model == 1:
+                accessory = self.wait.until(ec.element_to_be_clickable((By.XPATH, accessories_330i.get(index, "invalid index"))))
+                time.sleep(2)
+                accessory.click()
+            elif self.model == 2 or self.model == 3:
+                accessory = self.wait.until(ec.element_to_be_clickable((By.XPATH, accessories_M340i.get(index, "invalid index"))))
+                time.sleep(2)
+                accessory.click()
 
             if add == True:
                 addtobuild = self.wait.until(ec.element_to_be_clickable(
@@ -370,6 +538,7 @@ class SelectItem:
             close.click()
             print("Selected accessory index: " + str(index))
             self.confirm_change()
+            self.check_total()
             self.next_page_dock()
 
         except Exception as err:
@@ -395,9 +564,20 @@ class SelectItem:
             self.handler.error_message("error moving to next page", err)
     def confirm_change(self):
         try:
+            time.sleep(2)
+            nc_element = self.driver.find_element_by_class_name("conflict-modal__value.byo-core-type.theme-gkl.label-1")
+            netChange = nc_element.text
+
+            print("Net Change: " + str(netChange))
+            if netChange[0] == '+':
+                self.total = self.total + int(''.join(c for c in netChange if c.isdigit())) # get a raw int version of the price
+            elif netChange[0] == '-':
+                self.total = self.total - int(''.join(c for c in netChange if c.isdigit()))
+
             confirm = self.wait.until(ec.element_to_be_clickable((By.XPATH, "//button[@name='confirm-button']")))
             confirm.click()
-            print("change confirmed!")
+            print("change confirmed! current total: " + str(self.total))
+            self.changeConfirmed = True # change has been confirmed, ignore end calculations
         except Exception as err:
             self.handler.error_message("no changes to confirm", err)
 
@@ -409,3 +589,22 @@ class SelectItem:
             close.click()
         except Exception as err:
             self.handler.error_message("error closing zip modal", err)
+
+    def check_total(self):
+        try:
+            print("Current total: " + str(self.total))
+
+            display = self.driver.find_element_by_class_name(
+                "total-amount.core-type.theme-core.total-amount--bold.headline-5")
+
+            displayTotal = int(''.join(c for c in display.text if c.isdigit()))
+
+            print("Total on UI: " + str(displayTotal))
+
+            if self.total != displayTotal:
+                print("Total on UI does not match!")
+                print("Difference (total - displayTotal): " + str(self.total - displayTotal) )
+            else:
+                print("Totals match!")
+        except Exception as err:
+            self.handler.error_message("error checking total", err)

@@ -24,16 +24,17 @@ class TestScripts:
     def Test_A01(self):
         try:
             print("Beginning Test Case A01")
-            self.auto.select_model(1)
+            self.auto.select_model(1)           # 330i xDrive
             self.auto.select_design_330i(1)
             self.auto.select_color(7)
             self.auto.select_wheels(2)
-            self.auto.select_upholstery_330i(7)
-            self.auto.select_trim_330i(3)
-            self.auto.select_featured_package_330i(1)
-            self.auto.select_additional_packages_330i(0)
-            self.auto.select_all_options_330i(7, True)
-            self.auto.select_accessories_330i(0, True)
+            self.auto.select_upholstery(7)
+            self.auto.select_trim(3)
+            self.auto.select_featured_package(1)
+            self.auto.select_additional_packages(0)
+            self.auto.select_all_options(7, True)
+            self.auto.select_accessories(0, True)
+            print("Test A01 has finished executing with no issues.")
         except Exception as err:
             self.handler.error_message("A01", err)
 
@@ -44,6 +45,13 @@ class TestScripts:
             self.auto.select_model(2)
             self.auto.select_color(4)
             self.auto.select_wheels(9)
+            self.auto.select_upholstery(4)
+            self.auto.select_trim(4)
+            self.auto.select_featured_package(1)
+            self.auto.select_additional_packages(3)
+            self.auto.select_all_options(5, True)
+            self.auto.select_accessories(1, True)
+            print("Test B01 has executed with no issues.")
         except Exception as err:
             self.handler.error_message("B01", err)
 
