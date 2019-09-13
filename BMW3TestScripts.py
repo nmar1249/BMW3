@@ -17,22 +17,25 @@ import random
 
 class TestScripts:
 
-    handler = ErrorHandler()
-    auto = SelectItem()
+    handler = ErrorHandler()    # error handler class
+    auto = SelectItem()         # item selector object
+
+    #TODO remove sandbox test cases and create concrete versions based on the excel document
 
     # 330i sandbox flow
     def Test_A01(self):
         try:
             print("Beginning Test Case A01")
+            # 0 - 330i, 1 - 330i xDrive, 2 - M340i, 3 - M340i xDrive
             self.auto.select_model(1)           # 330i xDrive
-            self.auto.select_design_330i(1)
+            self.auto.select_design_330i(1)     # design is only available for 330i(xDrive) models
             self.auto.select_color(7)
             self.auto.select_wheels(2)
             self.auto.select_upholstery(7)
             self.auto.select_trim(3)
             self.auto.select_featured_package(1)
             self.auto.select_additional_packages(0)
-            self.auto.select_all_options(7, True)
+            self.auto.select_all_options(7, True)       # true = adding item, false = removing item
             self.auto.select_accessories(0, True)
             print("Test A01 has finished executing with no issues.")
         except Exception as err:

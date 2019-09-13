@@ -19,8 +19,7 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import ElementClickInterceptedException
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.keys import Keys
-
-import time
+from selenium.common.exceptions import  NoSuchElementException
 
 import time
 import random
@@ -50,6 +49,7 @@ class SelectItem:
         self.handler = ErrorHandler()
         self.total = 0
 
+    # track page loading time
     def loadtime(self):
         navigationStart = self.driver.execute_script("return window.performance.timing.navigationStart")
         responseStart = self.driver.execute_script("return window.performance.timing.responseStart")
@@ -72,12 +72,14 @@ class SelectItem:
                 2: "//a[@title='2020 BMW M340i Sedan']",        # M340i
                 3: "//a[@title='2020 BMW M340i xDrive Sedan']"  # M340i xDrive
             }
+
             self.loadtime()
 
+            # find the button of the specified model
             button = self.wait.until(
                 ec.element_to_be_clickable((By.XPATH, models.get(index, "invalid index"))))
             button.click()
-            self.model = index
+            self.model = index                      # set model to index, so it can get the base price
 
             self.total = self.startingPrice.get(index, "invalid index")
             print("Model selected. Index: " + str(index))
@@ -88,7 +90,7 @@ class SelectItem:
 
     # are you "unplugged" from the config? replug!
     def replug(self, model):
-        self.select_model(model)
+        self.select_model(model)    # refresh model select
 
     # select Design - 330i
     # there is no design option for M340i
@@ -97,9 +99,9 @@ class SelectItem:
             self.loadtime()
 
             designs = {
-                0: "//div[@data-index='0']",
-                1: "//div[@data-index='1']",
-                2: "//div[@data-index='2']"
+                0: "//div[@data-index='0']",    # sport line
+                1: "//div[@data-index='1']",    # luxury
+                2: "//div[@data-index='2']"     # m sport
             }
 
             self.changeConfirmed = False
@@ -119,9 +121,11 @@ class SelectItem:
         except Exception as err:
             self.handler.error_message("330i - design", err)
 
+    # select a paint job in the configurator
     def select_color(self, index):
         try:
 
+            # 330i paint types
             colors_330i = {
                 0: "//div[@title='Alpine White']",
                 1: "//div[@title='Jet Black']",
@@ -137,6 +141,7 @@ class SelectItem:
                 11: "//div[@title='Blue Ridge Mountain Metallic']"
             }
 
+            # m340i paint types
             colors_M340i = {
                 0: "//div[@title='Alpine White']",
                 1: "//div[@title='Black Sapphire Metallic']",
@@ -148,36 +153,59 @@ class SelectItem:
                 7: "//div[@title='Tanzanite Blue II Metallic"
             }
 
+            # resent change confirmed boolean
             self.changeConfirmed = False
             self.loadtime()
+
+            # at this point a pop-up well appear asking to input your zip. close it
             self.close_zip()
             time.sleep(2)
 
+            # declare price attribute
             price = 0
+
             # determine model
+            # 330i or 330i xdrive
             if self.model == 0 or self.model == 1:
+
+                # find color element
                 color = self.driver.find_element_by_xpath(colors_330i.get(index, "invalid index"))
                 self.driver.execute_script("arguments[0].scrollIntoView();", color)             # GET ELEMENT INTO VIEW
+
+                #extract list price from element (could be 0 or 550)
                 data = color.find_element_by_class_name("byo-rail-option")
                 price = data.get_attribute("listprice")
                 time.sleep(2)
-                color.click()
-            elif self.model == 2 or self.model == 3:
-                color = self.driver.find_element_by_xpath(colors_M340i.get(index, "invalid index"))
-                self.driver.execute_script("arguments[0].scrollIntoView();", color)  # GET ELEMENT INTO VIEW
-                data = color.find_element_by_class_name("byo-rail-option")
-                price = data.get_attribute("listprice")
-                time.sleep(2)
+
+                #click element
                 color.click()
 
+            # M340i or M340i xDrive
+            elif self.model == 2 or self.model == 3:
+
+                # find color element
+                color = self.driver.find_element_by_xpath(colors_M340i.get(index, "invalid index"))
+                self.driver.execute_script("arguments[0].scrollIntoView();", color)  # GET ELEMENT INTO VIEW
+
+                # extract list price from element
+                data = color.find_element_by_class_name("byo-rail-option")
+                price = data.get_attribute("listprice")
+                time.sleep(2)
+
+                # click element
+                color.click()
+
+            # confirm change (if needed)
             self.confirm_change()
+
+            # if confirm change menu didnt appear, calculate the new total
             if self.changeConfirmed == False:
                 self.total = self.total + int(price)
 
-
+            # verify that the total is properly displayed then move on to the next page
             self.check_total()
             self.next_page()
-            print("Color selected. Index: " + str(index))
+            print("Color selected. Index:\t" + str(index))
         except Exception as err:
             self.handler.error_message("color selection", err)
 
@@ -194,38 +222,53 @@ class SelectItem:
                 6: "//div[@data-index='6']",    # 19" M double-spoke jet black wheels - all-season run-flat
                 7: "//div[@data-index='7']"     # 19" Double-spoke bi-color orbit grey wheels - all-season run-flat
             }
-                                            #TODO change these comments to reflect the M340i wheel selection
+
             wheels_M340i = {
-                0: "//div[@data-index='0']",  # 18" v-spoke bi-color orbit grey wheels - all-season non run-flat
-                1: "//div[@data-index='1']",  # 18" v-spoke bi-color orbit grey wheels - all-season run-flat
-                2: "//div[@data-index='2']",  # 19" M Double-spoke bi-color jet black wheels - performance run-flat
-                3: "//div[@data-index='3']",  # 19" M double-spoke bi-color jet black wheels - all-season run-flat
-                4: "//div[@data-index='4']",  # 19" M double-spoke jet black wheels - high performance non run-flat
-                5: "//div[@data-index='5']",  # 19" M double-spoke jet black wheels - performance run-flat
-                6: "//div[@data-index='6']",  # 19" M double-spoke jet black wheels - all-season run-flat
+                0: "//div[@data-index='0']",  # 18" M Double-spoke bi-color orbit grey wheels - performance run-flat
+                1: "//div[@data-index='1']",  # 18" M Double-spoke bi-color orbit grey wheels - all-season non run-flat
+                2: "//div[@data-index='2']",  # 18" M Double-spoke bi-color orbit grey wheels - all-season run-flat
+                3: "//div[@data-index='3']",  # 19" M Double-spoke bi-color jet black wheels - performance run-flat
+                4: "//div[@data-index='4']",  # 19" M Double-spoke bi-color jet black wheels - all-season run-flat
+                5: "//div[@data-index='5']",  # 19" M Double-spoke jet black wheels - high performance non run-flat
+                6: "//div[@data-index='6']",  # 19" M Double-spoke jet black wheels - all-season run-flat
                 7: "//div[@data-index='7']",  # 19" Double-spoke bi-color orbit grey wheels - all-season run-flat
-                8: "//div[@data-index='8']",  # 19" Double-spoke bi-color orbit grey wheels - all-season run-flat
-                9: "//div[@data-index='9']",  # 19" Double-spoke bi-color orbit grey wheels - all-season run-flat
-                10: "//div[@data-index='10']"
+                8: "//div[@data-index='8']",  # 19" M Double-spoke cerium grey wheels - high performance non run-flat
+                9: "//div[@data-index='9']",  # 19" M Double-spoke cerium grey wheels - high performance runflat
+                10: "//div[@data-index='10']" # 19" M Double-spoke cerium grey wheels - all-season run-flat
             }
 
             self.loadtime()
             time.sleep(2)
 
+            # declare price variable
             price = 0
+
+            # 330i or 330i xDrive
             if self.model == 0 or self.model == 1:
+
+                # find element and scroll it into view
                 wheel = self.driver.find_element_by_xpath(wheels_330i.get(index, "invalid index"))
                 self.driver.execute_script("arguments[0].scrollIntoView();", wheel)
+
+                # extract price attribute from the element
                 data = wheel.find_element_by_class_name("byo-rail-option")
                 price = data.get_attribute("listprice")
                 time.sleep(2)
+
+                # click element
                 wheel.click()
+            # M340i or M340i xDrive
             elif self.model == 2 or self.model == 3:
+                # find element and scroll it into view
                 wheel = self.driver.find_element_by_xpath(wheels_M340i.get(index, "invalid index"))
                 self.driver.execute_script("arguments[0].scrollIntoView();", wheel)
+
+                # extract price attribute and record it
                 data = wheel.find_element_by_class_name("byo-rail-option")
                 price = data.get_attribute("listprice")
                 time.sleep(2)
+
+                # click element
                 wheel.click()
 
             print("selected wheel. index: " + str(index))
@@ -268,27 +311,44 @@ class SelectItem:
             time.sleep(2)
 
             price = 0
+
+            # 330i or 330i xDrive
             if self.model == 0 or self.model == 1:
+                # find element and scroll it into view
                 uph = self.driver.find_element_by_xpath(uph_list_330i.get(index, "invalid index"))
                 self.driver.execute_script("arguments[0].scrollIntoView();", uph)
+
+                # extract listprice attribute from the element
                 data = uph.find_element_by_class_name("byo-rail-option")
                 price = data.get_attribute("listprice")
                 time.sleep(2)
-                uph.click()
-            elif self.model == 2 or self.model == 3:
-                uph = self.driver.find_element_by_xpath(uph_list_M340i.get(index, "invalid index"))
-                self.driver.execute_script("arguments[0].scrollIntoView();", uph)
-                data = uph.find_element_by_class_name("byo-rail-option")
-                price = data.get_attribute("listprice")
-                time.sleep(2)
+
+                # click element
                 uph.click()
 
+            # M340i or M340i xDrive
+            elif self.model == 2 or self.model == 3:
+                # find element and scroll it into view
+                uph = self.driver.find_element_by_xpath(uph_list_M340i.get(index, "invalid index"))
+                self.driver.execute_script("arguments[0].scrollIntoView();", uph)
+
+                # extract listprice attribute from the element
+                data = uph.find_element_by_class_name("byo-rail-option")
+                price = data.get_attribute("listprice")
+                time.sleep(2)
+
+                # click element
+                uph.click()
+
+            # confirm change
             print("selected upholstery. index: " + str(index))
             self.confirm_change()
 
+            # if no changes needed to be confirmed, calculate the price
             if self.changeConfirmed == False:
                 self.total = self.total + int(price)
 
+            # compare the backend total against the total on the UI
             self.check_total()
             self.next_page()
         except Exception as err:
@@ -308,18 +368,28 @@ class SelectItem:
             self.changeConfirmed = False
             self.loadtime()
             time.sleep(2)
+
+            # find element and scroll it into view
             trim = self.driver.find_element_by_xpath(trims.get(index, "invalid index"))
             self.driver.execute_script("arguments[0].scrollIntoView();", trim)
+
+            # extract listprice attribute from the element
             data = trim.find_element_by_class_name("byo-rail-option")
             price = data.get_attribute("listprice")
             time.sleep(2)
+
+            # click element
             trim.click()
             print("selected trim. index: " + str(index))
+
+            # confirm change
             self.confirm_change()
 
+            # if change isnt confirmed calculate the total
             if self.changeConfirmed == False:
                 self.total = self.total + int(price)
 
+            # compare backend total against the total on UI then proceed
             self.check_total()
             self.next_page()
         except Exception as err:
@@ -341,26 +411,36 @@ class SelectItem:
             self.changeConfirmed = False
             self.loadtime()
             time.sleep(2)
+
+            # 330i or 330i xDrive
             if self.model == 0 or self.model == 1:
+                # find element and click
                 f_package = self.driver.find_element_by_xpath(f_packages_330i.get(index, "invalid index"))
                 time.sleep(2)
                 f_package.click()
+            # M340i or M340i xDrive
             elif self.model == 2 or self.model == 3:
+                # find element and click
                 f_package = self.driver.find_element_by_xpath(f_packages_M340i.get(index, "invalid index"))
                 time.sleep(2)
                 f_package.click()
 
+            # extract listprice attribute
             price = self.driver.find_element_by_class_name("package-modal__price.theme-core.byo-core-type.headline-6")
             time.sleep(2)
+
+            # click the add to build button
             addtobuild = self.driver.find_element_by_class_name(
                 "package-modal__selected-btn.theme-core.byo-core-type.headline-6")
             addtobuild.click()
             print("selected featured package. index: " + str(index))
             self.confirm_change()
 
+            # calculate the price if there were no changes to confirm
             if self.changeConfirmed == False:
                 self.total = self.total + int(''.join(c for c in price.text if c.isdigit()))
 
+            # compare the backend total to the total on the UI
             self.check_total()
         except Exception as err:
             self.handler.error_message("error selecting featured package", err)
@@ -381,9 +461,12 @@ class SelectItem:
                 3: "//button[contains(text(), 'Cooling and High Performance Tire Package')]"
             }
 
+            # reset confirmed change boolean
             self.changeConfirmed = False
             self.loadtime()
             time.sleep(2)
+
+            # 330i or 330i xDrive
             if self.model == 0 or self.model == 1:
                 a_package = self.driver.find_element_by_xpath(a_packages_330i.get(index, "invalid index"))
                 self.driver.execute_script("arguments[0].scrollIntoView();", a_package)
@@ -391,6 +474,8 @@ class SelectItem:
                 action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(Keys.UP).perform() # bring the element into view
                 time.sleep(3)
                 a_package.click()
+
+            # M340i or M340i xDrive
             elif self.model == 2 or self.model == 3:
                 a_package = self.driver.find_element_by_xpath(a_packages_M340i.get(index, "invalid index"))
                 self.driver.execute_script("arguments[0].scrollIntoView();", a_package)
@@ -400,8 +485,11 @@ class SelectItem:
                 time.sleep(3)
                 a_package.click()
 
+            # extract price attribute
             price = self.driver.find_element_by_class_name(
                 "package-modal__price.package-modal__price--add-pkg.theme-core.byo-core-type.headline-6")
+
+            # click add to build
             addtobuild = self.driver.find_element_by_class_name(
                 "package-modal__selected-btn.theme-core.byo-core-type.headline-6")
             addtobuild.click()
@@ -409,6 +497,7 @@ class SelectItem:
             print("Selected additional package. Index: " + str(index))
             self.confirm_change()
 
+            # run calculations of no changes were confirmed
             if self.changeConfirmed == False:
                 self.total = self.total + int(''.join(c for c in price.text if c.isdigit()))
 
@@ -450,6 +539,9 @@ class SelectItem:
 
             self.loadtime()
 
+            time.sleep(3)
+
+            # 330i or 330i xDrive
             if self.model == 0 or self.model == 1:
                 option = self.wait.until(ec.element_to_be_clickable((By.XPATH, options_330i.get(index, "invalid index"))))
                 self.driver.execute_script("arguments[0].scrollIntoView();", option)
@@ -457,6 +549,8 @@ class SelectItem:
                     Keys.UP).perform()  # bring the element into view
                 time.sleep(2)
                 option.click()
+
+            # M#40i or M340i xDrive
             elif self.model == 2 or self.model == 3:
                 option = self.wait.until(
                     ec.element_to_be_clickable((By.XPATH, options_M340i.get(index, "invalid index"))))
@@ -466,6 +560,7 @@ class SelectItem:
                 time.sleep(2)
                 option.click()
 
+            # if item is being added
             if add == True:
                 price = self.driver.find_element_by_class_name(
                     "detail-modal-price.theme-core.byo-core-type.headline-5")
@@ -473,6 +568,7 @@ class SelectItem:
                     (By.CLASS_NAME, "detail-modal-button-add-item.cta-1" )
                 ))
                 addtobuild.click()
+            # else its being removed
             else:
                 price = self.driver.find_element_by_class_name(
                     "detail-modal-price.theme-core.byo-core-type.headline-5")
@@ -481,12 +577,14 @@ class SelectItem:
                 ))
                 remove.click()
 
+            # close window
             time.sleep(2)
             close = self.wait.until(ec.element_to_be_clickable((By.CLASS_NAME, "close-button")))
             close.click()
             print("Selected options. index: " + str(index))
             self.confirm_change()
 
+            # if no changes are confirmed, calculate the price based on the add boolean
             if self.changeConfirmed == False:
                 if add == True:
                     self.total = self.total + int(''.join(c for c in price.text if c.isdigit()))
@@ -500,6 +598,7 @@ class SelectItem:
             self.select_all_options(index, False) # perhaps it needs to be removed, try that.
             self.handler.error_message("error selecting options", err)
 
+    # choose accessories for the vehicle configurator
     def select_accessories(self, index, add):
         try:
             accessories_330i = {
@@ -513,23 +612,27 @@ class SelectItem:
 
             self.loadtime()
 
+            # 330i or 330i xDrive
             if self.model == 0 or self.model == 1:
                 accessory = self.wait.until(ec.element_to_be_clickable((By.XPATH, accessories_330i.get(index, "invalid index"))))
-                time.sleep(2)
+                time.sleep(4)
                 accessory.click()
+            # M340i or M340i xDrive
             elif self.model == 2 or self.model == 3:
                 accessory = self.wait.until(ec.element_to_be_clickable((By.XPATH, accessories_M340i.get(index, "invalid index"))))
-                time.sleep(2)
+                time.sleep(4)
                 accessory.click()
 
+            # if item is to be added
             if add == True:
                 addtobuild = self.wait.until(ec.element_to_be_clickable(
                     (By.CLASS_NAME, "detail-modal-button-add-item.cta-1")
                 ))
                 addtobuild.click()
+            # if item is to be removed
             else:
                 remove = self.wait.until(ec.element_to_be_clickable(
-                    (By.CLASS_NAME, "detail-modal-button-addi-item.active.cta-1")
+                    (By.CLASS_NAME, "detail-modal-button-addi-item.active.cta-1")   # xpath for removal button
                 ))
                 remove.click()
 
@@ -544,7 +647,7 @@ class SelectItem:
         except Exception as err:
             self.handler.error_message("error selecting accessories", err)
 
-
+    # go to the next page in the configurator
     def next_page(self):
         try:
             next = self.wait.until(
@@ -554,6 +657,7 @@ class SelectItem:
         except Exception as err:
             self.handler.error_message("error moving to next page", err)
 
+    # go to the final page (different xpath than previous method
     def next_page_dock(self):
         try:
             next = self.wait.until(
@@ -562,49 +666,69 @@ class SelectItem:
             next.click()
         except Exception as err:
             self.handler.error_message("error moving to next page", err)
+
+    # confirm change
+    # this method handles the pop-up menu that asks a user to confirm changes when an item
+    # is exclusive to another item. The price calculation is not always accurate since not all
+    # items are shown on the screen.
     def confirm_change(self):
         try:
             time.sleep(2)
+            #get the net value of the change
             nc_element = self.driver.find_element_by_class_name("conflict-modal__value.byo-core-type.theme-gkl.label-1")
             netChange = nc_element.text
 
-            print("Net Change: " + str(netChange))
+            print("Net Change:\t" + str(netChange))
+
+            # if change is positive, add to total, if it is negative, subtract
             if netChange[0] == '+':
-                self.total = self.total + int(''.join(c for c in netChange if c.isdigit())) # get a raw int version of the price
+                self.total = self.total + int(''.join(c for c in netChange if c.isdigit())) # this line removes all
+                                                                                            # non digits from the
+                                                                                            # string.
             elif netChange[0] == '-':
                 self.total = self.total - int(''.join(c for c in netChange if c.isdigit()))
 
+            # click confirm
             confirm = self.wait.until(ec.element_to_be_clickable((By.XPATH, "//button[@name='confirm-button']")))
             confirm.click()
-            print("change confirmed! current total: " + str(self.total))
+            print("change confirmed! current total:\t" + str(self.total))
             self.changeConfirmed = True # change has been confirmed, ignore end calculations
+        except NoSuchElementException:
+            print("No changes to confirm.")
         except Exception as err:
-            self.handler.error_message("no changes to confirm", err)
+            self.handler.error_message("Error confirming change!", err)
 
     # closes zipcode window - can cause click intercepts if open
     def close_zip(self):
         try:
             time.sleep(4) # wait for the banner to disappear
+            # close zip pop-up
             close = self.wait.until(ec.element_to_be_clickable((By.XPATH, "//button[@aria-label='Close Zipcode Modal']")))
             close.click()
         except Exception as err:
             self.handler.error_message("error closing zip modal", err)
 
+    # calculate the listprice attribute and compare it to the total displayed on the UI
     def check_total(self):
         try:
-            print("Current total: " + str(self.total))
+            # show total calculated on backend
+            print("Backend total: " + str(self.total))
 
+            # get the total displayed on the UI
             display = self.driver.find_element_by_class_name(
                 "total-amount.core-type.theme-core.total-amount--bold.headline-5")
 
-            displayTotal = int(''.join(c for c in display.text if c.isdigit()))
+            displayTotal = int(''.join(c for c in display.text if c.isdigit())) # remove non-digits
 
+            # print total on UI
             print("Total on UI: " + str(displayTotal))
 
+            # verify that the totals are equal
             if self.total != displayTotal:
+                # if they arent, send a message
                 print("Total on UI does not match!")
                 print("Difference (total - displayTotal): " + str(self.total - displayTotal) )
             else:
-                print("Totals match!")
+                print("Totals match!")  # they match, woo
         except Exception as err:
             self.handler.error_message("error checking total", err)
