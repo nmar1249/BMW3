@@ -104,13 +104,22 @@ class SelectItem:
                 2: "//div[@data-index='2']"     # m sport
             }
 
+            # reset change token
             self.changeConfirmed = False
             time.sleep(2)
+
+            # find the element and extract the listprice attribute
             design = self.driver.find_element_by_xpath(designs.get(index, "invalid index"))
             data = design.find_element_by_class_name("byo-rail-option")
             price = data.get_attribute("listprice")
+
+            # click on the element
             design.click()
             print("Design selected. Index: " + str(index))
+
+            # confirm change menu is brought up after selecting the next button, not after selecting
+            # the element itself; which is why here next_page is called before confirmed_change, but isnt
+            # elsewhere.
             self.next_page()
             self.confirm_change()
 
@@ -274,14 +283,17 @@ class SelectItem:
             print("selected wheel. index: " + str(index))
             self.confirm_change()
 
+            # calculate total if no additional changes were made
             if self.changeConfirmed == False:
                 self.total = self.total + int(price)
 
+            # verify total and move on to the next page
             self.check_total()
             self.next_page()
         except Exception as err:
             self.handler.error_message("error selecting wheels", err)
 
+    # select upholestry for the 3-series sedan variants
     def select_upholstery(self, index):
         try:
 
@@ -468,21 +480,32 @@ class SelectItem:
 
             # 330i or 330i xDrive
             if self.model == 0 or self.model == 1:
+                # find the element and scroll it into view
                 a_package = self.driver.find_element_by_xpath(a_packages_330i.get(index, "invalid index"))
                 self.driver.execute_script("arguments[0].scrollIntoView();", a_package)
                 time.sleep(2)
+
+                # use key presses to make sure element is not intercepted
                 action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(Keys.UP).perform() # bring the element into view
                 time.sleep(3)
+
+                # click on the element
                 a_package.click()
 
             # M340i or M340i xDrive
             elif self.model == 2 or self.model == 3:
+
+                # find the element and scroll it into view
                 a_package = self.driver.find_element_by_xpath(a_packages_M340i.get(index, "invalid index"))
                 self.driver.execute_script("arguments[0].scrollIntoView();", a_package)
                 time.sleep(2)
+
+                # use key presses to make sure the element is not intercepted
                 action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(
                     Keys.UP).perform()  # bring the element into view
                 time.sleep(3)
+
+                # click on the element
                 a_package.click()
 
             # extract price attribute
@@ -636,9 +659,12 @@ class SelectItem:
                 ))
                 remove.click()
 
+            # close the window
             time.sleep(2)
             close = self.wait.until(ec.element_to_be_clickable((By.CLASS_NAME, "close-button")))
             close.click()
+
+            # confirm the change, verify the total and then move to the next page
             print("Selected accessory index: " + str(index))
             self.confirm_change()
             self.check_total()
