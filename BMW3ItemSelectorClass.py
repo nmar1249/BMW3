@@ -568,7 +568,7 @@ class SelectItem:
             self.confirm_change()
 
             close = self.wait.until(ec.element_to_be_clickable(
-                (By.CLASS_NAME, "package-modal__cancel-btn.theme-core.byo-core-type.label-1")))
+                (By.CLASS_NAME, "close-button")))
             close.click()
             # run calculations of no changes were confirmed
             if self.changeConfirmed == False:
@@ -652,13 +652,13 @@ class SelectItem:
 
             # add to history
             title = self.driver.find_element_by_class_name(
-                "package-modal__name.theme-core.byo-core-type.headline-4")
+                "detail-modal-title.theme-core.byo-core-type.headline-4")
             self.config.append(title.text)
             print(self.config)
 
             # close window
             time.sleep(2)
-            close = self.wait.until(ec.element_to_be_clickable((By.CLASS_NAME, "close-button")))
+            close = self.driver.find_element_by_class_name("close-button")
             close.click()
             print("Selected options. index: " + str(index))
             self.confirm_change()
@@ -719,7 +719,7 @@ class SelectItem:
 
             # add to history
             title = self.driver.find_element_by_class_name(
-                "package-modal__name.theme-core.byo-core-type.headline-4")
+                "detail-modal-title.theme-core.byo-core-type.headline-4")
             self.config.append(title.text)
             print(self.config)
 
@@ -734,6 +734,7 @@ class SelectItem:
             self.check_total()
             self.next_page_dock()
 
+            self.driver.quit()
         except Exception as err:
             self.select_accessories(index, False)
             self.handler.error_message("error selecting accessories", err)

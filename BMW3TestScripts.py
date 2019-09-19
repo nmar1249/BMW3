@@ -20,12 +20,10 @@ class TestScripts:
     handler = ErrorHandler()    # error handler class
     auto = SelectItem()         # item selector object
 
-    #TODO remove sandbox test cases and create concrete versions based on the excel document
-
     # A01 - Adding designs to the 330i sedan
     def Test_A01(self):
         try:
-            # 0 - 330i, 1 - 330i xDrive, 2 - M340i, 3 - M340i xDrive
+            # 0 - 330i, 1 - 330i xDrive
             print("Beginning Test Case A01")
             self.auto.select_model(random.randint(0, 1))           # 330i or 330i xDrive
             self.auto.select_design_330i(random.randint(0, 2))     # design is only available for 330i(xDrive) models
@@ -70,7 +68,7 @@ class TestScripts:
             self.auto.select_additional_packages(random.randint(0, 3))
             print("Test A04 has finished executing with no issues.")
         except Exception as err:
-            self.handler.error_message("A03", err)
+            self.handler.error_message("A04", err)
 
     # A05/A06 - Adding "all options" to the 330i sedan and accessory (there is only one for 330i)
     def Test_A05n6(self):
@@ -80,9 +78,9 @@ class TestScripts:
             print("Beginning Test Case A05n6")
             self.auto.select_all_options(random.randint(0, 11), True)  # true = adding item, false = removing item
             self.auto.select_accessories(0, True)                      # isnt always available
-            print("Test A04 has finished executing with no issues.")
+            print("Test A05n6 has finished executing with no issues.")
         except Exception as err:
-            self.handler.error_message("A03", err)
+            self.handler.error_message("A05n6", err)
 
 
     # BEGIN M340i TEST CASES
@@ -158,7 +156,7 @@ class TestScripts:
             self.auto.select_accessories(random.randint(0, 1), True)
             print("Test B05 has finished executing with no issues.")
         except Exception as err:
-            self.handler.error_message("B05", err)
+            self.handler.error_message("B06", err)
 '''
 
     define class variables
