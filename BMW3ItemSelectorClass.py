@@ -75,6 +75,9 @@ class SelectItem:
                 3: "//a[@title='2020 BMW M340i xDrive Sedan']"  # M340i xDrive
             }
 
+            # maximize window
+            self.driver.maximize_window()
+
             # find the button of the specified model
             button = self.wait.until(
                 ec.element_to_be_clickable((By.XPATH, models.get(index, "invalid index"))))
@@ -105,7 +108,7 @@ class SelectItem:
 
             # reset change token
             self.changeConfirmed = False
-            time.sleep(2)
+            time.sleep(1.5)
 
             # find the element and extract the listprice attribute
             design = self.driver.find_element_by_xpath(designs.get(index, "invalid index"))
@@ -171,7 +174,7 @@ class SelectItem:
 
             # at this point a pop-up well appear asking to input your zip. close it
             self.close_zip()
-            time.sleep(2)
+            time.sleep(1.5)
 
             # declare price attribute
             price = 0
@@ -187,7 +190,7 @@ class SelectItem:
                 #extract list price from element (could be 0 or 550)
                 data = color.find_element_by_class_name("byo-rail-option")
                 price = data.get_attribute("listprice")
-                time.sleep(2)
+                time.sleep(1)
 
                 #click element
                 color.click()
@@ -202,7 +205,7 @@ class SelectItem:
                 # extract list price from element
                 data = color.find_element_by_class_name("byo-rail-option")
                 price = data.get_attribute("listprice")
-                time.sleep(2)
+                time.sleep(1)
 
                 # click element
                 color.click()
@@ -254,7 +257,7 @@ class SelectItem:
                 10: "//div[@data-index='10']" # 19" M Double-spoke cerium grey wheels - all-season run-flat
             }
 
-            time.sleep(2)
+            time.sleep(1.5)
 
             # declare price variable
             price = 0
@@ -269,7 +272,7 @@ class SelectItem:
                 # extract price attribute from the element
                 data = wheel.find_element_by_class_name("byo-rail-option")
                 price = data.get_attribute("listprice")
-                time.sleep(2)
+                time.sleep(1)
 
                 # click element
                 wheel.click()
@@ -282,7 +285,7 @@ class SelectItem:
                 # extract price attribute and record it
                 data = wheel.find_element_by_class_name("byo-rail-option")
                 price = data.get_attribute("listprice")
-                time.sleep(2)
+                time.sleep(1)
 
                 # click element
                 wheel.click()
@@ -331,7 +334,7 @@ class SelectItem:
             }
 
             self.changeConfirmed = False
-            time.sleep(2)
+            time.sleep(1)
 
             price = 0
 
@@ -348,7 +351,7 @@ class SelectItem:
                 # extract listprice attribute from the element
                 data = uph.find_element_by_class_name("byo-rail-option")
                 price = data.get_attribute("listprice")
-                time.sleep(2)
+                time.sleep(1)
 
                 # click element
                 uph.click()
@@ -364,7 +367,7 @@ class SelectItem:
                 # extract listprice attribute from the element
                 data = uph.find_element_by_class_name("byo-rail-option")
                 price = data.get_attribute("listprice")
-                time.sleep(2)
+                time.sleep(1)
 
                 # click element
                 uph.click()
@@ -400,7 +403,7 @@ class SelectItem:
             }
 
             self.changeConfirmed = False
-            time.sleep(2)
+            time.sleep(1)
 
             # find element and scroll it into view
             trim = self.driver.find_element_by_xpath(trims.get(index, "invalid index"))
@@ -411,7 +414,7 @@ class SelectItem:
             # extract listprice attribute from the element
             data = trim.find_element_by_class_name("byo-rail-option")
             price = data.get_attribute("listprice")
-            time.sleep(2)
+            time.sleep(1)
 
             # click element
             trim.click()
@@ -449,24 +452,24 @@ class SelectItem:
             }
 
             self.changeConfirmed = False
-            time.sleep(2)
+            time.sleep(1)
 
             # 330i or 330i xDrive
             if self.model == 0 or self.model == 1:
                 # find element and click
                 f_package = self.driver.find_element_by_xpath(f_packages_330i.get(index, "invalid index"))
-                time.sleep(2)
+                time.sleep(1)
                 f_package.click()
             # M340i or M340i xDrive
             elif self.model == 2 or self.model == 3:
                 # find element and click
                 f_package = self.driver.find_element_by_xpath(f_packages_M340i.get(index, "invalid index"))
-                time.sleep(2)
+                time.sleep(1)
                 f_package.click()
 
             # extract listprice attribute
             price = self.driver.find_element_by_class_name("package-modal__price.theme-core.byo-core-type.headline-6")
-            time.sleep(2)
+            time.sleep(1)
 
             # add to history
             title = self.driver.find_element_by_class_name("package-modal__name.theme-core.byo-core-type.headline-5")
@@ -482,10 +485,13 @@ class SelectItem:
 
             self.confirm_change()
 
+            try:
 
-            close = self.wait.until(ec.element_to_be_clickable(
-                (By.CLASS_NAME, "package-modal__cancel-btn.theme-core.byo-core-type.label-1")))
-            close.click()
+                close = self.wait.until(ec.element_to_be_clickable(
+                    (By.CLASS_NAME, "package-modal__cancel-btn.theme-core.byo-core-type.label-1")))
+                close.click()
+            except:
+                print("nothing to close")
             # calculate the price if there were no changes to confirm
             if self.changeConfirmed == False:
                 self.total = self.total + int(''.join(c for c in price.text if c.isdigit()))
@@ -514,18 +520,18 @@ class SelectItem:
 
             # reset confirmed change boolean
             self.changeConfirmed = False
-            time.sleep(2)
+            time.sleep(1)
 
             # 330i or 330i xDrive
             if self.model == 0 or self.model == 1:
                 # find the element and scroll it into view
                 a_package = self.driver.find_element_by_xpath(a_packages_330i.get(index, "invalid index"))
                 self.driver.execute_script("arguments[0].scrollIntoView();", a_package)
-                time.sleep(2)
+                time.sleep(1)
 
                 # use key presses to make sure element is not intercepted
                 action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(Keys.UP).perform() # bring the element into view
-                time.sleep(3)
+                time.sleep(1)
 
                 # click on the element
                 a_package.click()
@@ -536,12 +542,12 @@ class SelectItem:
                 # find the element and scroll it into view
                 a_package = self.driver.find_element_by_xpath(a_packages_M340i.get(index, "invalid index"))
                 self.driver.execute_script("arguments[0].scrollIntoView();", a_package)
-                time.sleep(2)
+                time.sleep(1)
 
                 # use key presses to make sure the element is not intercepted
                 action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(
                     Keys.UP).perform()  # bring the element into view
-                time.sleep(3)
+                time.sleep(1)
 
                 # click on the element
                 a_package.click()
@@ -559,13 +565,16 @@ class SelectItem:
             addtobuild = self.driver.find_element_by_class_name(
                 "package-modal__selected-btn.theme-core.byo-core-type.headline-6")
             addtobuild.click()
-            time.sleep(6)
+            time.sleep(1)
             print("Selected additional package. Index: " + str(index))
             self.confirm_change()
 
-            close = self.wait.until(ec.element_to_be_clickable(
-                (By.CLASS_NAME, "close-button")))
-            close.click()
+            try:
+                close = self.wait.until(ec.element_to_be_clickable(
+                    (By.CLASS_NAME, "close-button")))
+                close.click()
+            except:
+                print("nothing to close")
             # run calculations of no changes were confirmed
             if self.changeConfirmed == False:
                 self.total = self.total + int(''.join(c for c in price.text if c.isdigit()))
@@ -607,7 +616,7 @@ class SelectItem:
                 10: "//button[contains(text(), 'Adaptive M Suspension')]"
             }
 
-            time.sleep(3)
+            time.sleep(1.5)
 
             # 330i or 330i xDrive
             if self.model == 0 or self.model == 1:
@@ -615,7 +624,7 @@ class SelectItem:
                 self.driver.execute_script("arguments[0].scrollIntoView();", option)
                 action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(
                     Keys.UP).perform()  # bring the element into view
-                time.sleep(2)
+                time.sleep(1)
                 option.click()
 
             # M#40i or M340i xDrive
@@ -625,7 +634,7 @@ class SelectItem:
                 self.driver.execute_script("arguments[0].scrollIntoView();", option)
                 action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(
                     Keys.UP).perform()  # bring the element into view
-                time.sleep(2)
+                time.sleep(1)
                 option.click()
 
             # if item is being added
@@ -652,9 +661,13 @@ class SelectItem:
             print(self.config)
 
             # close window
-            time.sleep(2)
-            close = self.driver.find_element_by_class_name("close-button")
-            close.click()
+            time.sleep(1)
+            try:
+                close = self.driver.find_element_by_class_name("close-button")
+                close.click()
+            except:
+                print("nothing to close")
+
             print("Selected options. index: " + str(index))
             self.confirm_change()
 
@@ -672,8 +685,9 @@ class SelectItem:
 
             self.loadtime()
         except Exception as err:
-            self.select_all_options(index, False) # perhaps it needs to be removed, try that.
             self.handler.error_message("error selecting options", err)
+            self.select_all_options(index, False) # perhaps it needs to be removed, try that.
+
 
     # choose accessories for the vehicle configurator
     def select_accessories(self, index, add):
@@ -687,16 +701,16 @@ class SelectItem:
                 1: "//button[contains(text(), 'BMW Loading Sill Mat')]"
             }
 
-
+            time.sleep(2)
             # 330i or 330i xDrive
             if self.model == 0 or self.model == 1:
-                accessory = self.wait.until(ec.element_to_be_clickable((By.XPATH, accessories_330i.get(index, "invalid index"))))
-                time.sleep(4)
+                accessory = self.wait.until(ec.element_to_be_clickable((
+                    By.XPATH, accessories_330i.get(index, "invalid index"))))
                 accessory.click()
             # M340i or M340i xDrive
             elif self.model == 2 or self.model == 3:
-                accessory = self.wait.until(ec.element_to_be_clickable((By.XPATH, accessories_M340i.get(index, "invalid index"))))
-                time.sleep(4)
+                accessory = self.wait.until(ec.element_to_be_clickable((
+                    By.XPATH, accessories_M340i.get(index, "invalid index"))))
                 accessory.click()
 
             # if item is to be added
@@ -719,9 +733,12 @@ class SelectItem:
             print(self.config)
 
             # close the window
-            time.sleep(2)
-            close = self.wait.until(ec.element_to_be_clickable((By.CLASS_NAME, "close-button")))
-            close.click()
+            time.sleep(1)
+            try:
+                close = self.wait.until(ec.element_to_be_clickable((By.CLASS_NAME, "close-button")))
+                close.click()
+            except:
+                print("nothing to close")
 
             # confirm the change, verify the total and then move to the next page
             print("Selected accessory index: " + str(index))
@@ -731,8 +748,8 @@ class SelectItem:
             self.loadtime()
             self.driver.quit()
         except Exception as err:
-            self.select_accessories(index, False)
             self.handler.error_message("error selecting accessories", err)
+            self.select_accessories(index, False)
 
     def select_maintenance_program(self, index, add):
         try:
@@ -747,7 +764,9 @@ class SelectItem:
             program = self.wait.until(
                 ec.element_to_be_clickable((By.XPATH, programs.get(index, "invalid index"))))
             self.driver.execute_script("arguments[0].scrollIntoView();", program)
-            time.sleep(4)
+            action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(
+                Keys.UP).perform()  # bring the element into view
+            time.sleep(1)
             program.click()
 
             # if item is to be added
@@ -764,9 +783,12 @@ class SelectItem:
                 remove.click()
 
             # close the window
-            time.sleep(2)
-            close = self.wait.until(ec.element_to_be_clickable((By.CLASS_NAME, "close-button")))
-            close.click()
+            time.sleep(1)
+            try:
+                close = self.wait.until(ec.element_to_be_clickable((By.CLASS_NAME, "close-button")))
+                close.click()
+            except:
+                print("nothing to close")
 
             # confirm the change, verify the total and then move to the next page
             print("Selected maintenance program index: " + str(index))
@@ -804,7 +826,7 @@ class SelectItem:
     # items are shown on the screen.
     def confirm_change(self):
         try:
-            time.sleep(2)
+            time.sleep(1.5)
             #get the net value of the change
             nc_element = self.driver.find_element_by_class_name("conflict-modal__value.byo-core-type.theme-gkl.label-1")
             netChange = nc_element.text
@@ -866,7 +888,7 @@ class SelectItem:
     # closes zipcode window - can cause click intercepts if open
     def close_zip(self):
         try:
-            time.sleep(4) # wait for the banner to disappear
+            time.sleep(1.5) # wait for the banner to disappear
             # close zip pop-up
             close = self.wait.until(ec.element_to_be_clickable((By.XPATH, "//button[@aria-label='Close Zipcode Modal']")))
             close.click()
