@@ -59,8 +59,8 @@ class SelectItem:
         # Calculate the performance
         backendPerformance_calc = responseStart - navigationStart
         frontendPerformance_calc = domComplete - responseStart
-       # print("Back End: %s" % backendPerformance_calc)
-      #  print("Front End: %s" % frontendPerformance_calc)
+        print("Back End: %s" % backendPerformance_calc)
+        print("Front End: %s" % frontendPerformance_calc)
         return
 
 
@@ -75,8 +75,6 @@ class SelectItem:
                 3: "//a[@title='2020 BMW M340i xDrive Sedan']"  # M340i xDrive
             }
 
-            self.loadtime()
-
             # find the button of the specified model
             button = self.wait.until(
                 ec.element_to_be_clickable((By.XPATH, models.get(index, "invalid index"))))
@@ -86,6 +84,7 @@ class SelectItem:
             self.total = self.startingPrice.get(index, "invalid index")
             print("Model selected. Index: " + str(index))
             self.check_total()
+            self.loadtime()
         except Exception as err:
             print(str(err))
             self.replug(index)
@@ -98,8 +97,6 @@ class SelectItem:
     # there is no design option for M340i
     def select_design_330i(self, index):
         try:
-            self.loadtime()
-
             designs = {
                 0: "//div[@data-index='0']",    # sport line
                 1: "//div[@data-index='1']",    # luxury
@@ -133,6 +130,7 @@ class SelectItem:
                 self.total = self.total + int(price)
 
             self.check_total()
+            self.loadtime()
         except Exception as err:
             self.handler.error_message("330i - design", err)
 
@@ -170,7 +168,6 @@ class SelectItem:
 
             # resent change confirmed boolean
             self.changeConfirmed = False
-            self.loadtime()
 
             # at this point a pop-up well appear asking to input your zip. close it
             self.close_zip()
@@ -225,6 +222,7 @@ class SelectItem:
             self.check_total()
             self.next_page()
             print("Color selected. Index:\t" + str(index))
+            self.loadtime()
         except Exception as err:
             self.handler.error_message("color selection", err)
 
@@ -256,7 +254,6 @@ class SelectItem:
                 10: "//div[@data-index='10']" # 19" M Double-spoke cerium grey wheels - all-season run-flat
             }
 
-            self.loadtime()
             time.sleep(2)
 
             # declare price variable
@@ -304,6 +301,7 @@ class SelectItem:
             # verify total and move on to the next page
             self.check_total()
             self.next_page()
+            self.loadtime()
         except Exception as err:
             self.handler.error_message("error selecting wheels", err)
 
@@ -333,7 +331,6 @@ class SelectItem:
             }
 
             self.changeConfirmed = False
-            self.loadtime()
             time.sleep(2)
 
             price = 0
@@ -387,6 +384,7 @@ class SelectItem:
             # compare the backend total against the total on the UI
             self.check_total()
             self.next_page()
+            self.loadtime()
         except Exception as err:
             self.handler.error_message("error selecting upholstery", err)
 
@@ -402,7 +400,6 @@ class SelectItem:
             }
 
             self.changeConfirmed = False
-            self.loadtime()
             time.sleep(2)
 
             # find element and scroll it into view
@@ -434,6 +431,7 @@ class SelectItem:
             # compare backend total against the total on UI then proceed
             self.check_total()
             self.next_page()
+            self.loadtime()
         except Exception as err:
             self.handler.error_message("error selecting trim", err)
 
@@ -451,7 +449,6 @@ class SelectItem:
             }
 
             self.changeConfirmed = False
-            self.loadtime()
             time.sleep(2)
 
             # 330i or 330i xDrive
@@ -495,7 +492,7 @@ class SelectItem:
 
             # compare the backend total to the total on the UI
             self.check_total()
-
+            self.loadtime()
         except Exception as err:
             self.handler.error_message("error selecting featured package", err)
 
@@ -517,7 +514,6 @@ class SelectItem:
 
             # reset confirmed change boolean
             self.changeConfirmed = False
-            self.loadtime()
             time.sleep(2)
 
             # 330i or 330i xDrive
@@ -575,6 +571,7 @@ class SelectItem:
                 self.total = self.total + int(''.join(c for c in price.text if c.isdigit()))
 
             self.check_total()
+            self.loadtime()
         except Exception as err:
             self.handler.error_message("error selecting additional package", err)
 
@@ -609,8 +606,6 @@ class SelectItem:
                 9: "//button[contains(text(), 'Harman Kardon surround sound system')]",
                 10: "//button[contains(text(), 'Adaptive M Suspension')]"
             }
-
-            self.loadtime()
 
             time.sleep(3)
 
@@ -675,6 +670,7 @@ class SelectItem:
             if self.model == 0 or self.model == 1:
                 self.next_page_dock()
 
+            self.loadtime()
         except Exception as err:
             self.select_all_options(index, False) # perhaps it needs to be removed, try that.
             self.handler.error_message("error selecting options", err)
@@ -691,7 +687,6 @@ class SelectItem:
                 1: "//button[contains(text(), 'BMW Loading Sill Mat')]"
             }
 
-            self.loadtime()
 
             # 330i or 330i xDrive
             if self.model == 0 or self.model == 1:
@@ -733,7 +728,7 @@ class SelectItem:
             self.confirm_change()
             self.check_total()
             self.next_page_dock()
-
+            self.loadtime()
             self.driver.quit()
         except Exception as err:
             self.select_accessories(index, False)
@@ -748,8 +743,6 @@ class SelectItem:
                 3: "//button[contains(text(), 'BMW Ultimate Care+ 3 Bundle')]",
                 4: "//button[contains(text(), 'BMW Ultimate Care+ 4 Bundle')]"
             }
-
-            self.loadtime()
 
             program = self.wait.until(
                 ec.element_to_be_clickable((By.XPATH, programs.get(index, "invalid index"))))
@@ -780,7 +773,7 @@ class SelectItem:
             self.confirm_change()
             self.check_total()
             self.next_page_dock()
-
+            self.loadtime()
         except Exception as err:
             self.select_maintenance_program(index, False)
             self.handler.error_message("error selecting maintenace program", err)
@@ -899,7 +892,7 @@ class SelectItem:
             if self.total != displayTotal:
                 # if they arent, send a message
                 print("Total on UI does not match!")
-                print("Difference (total - displayTotal): " + str(self.total - displayTotal) )
+                print("Difference (total - displayTotal): " + str(self.total - displayTotal))
             else:
                 print("Totals match!")  # they match, woo
         # if the total element wasnt found, display this message and carry on
