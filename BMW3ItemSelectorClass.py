@@ -108,13 +108,24 @@ class SelectItem:
 
             # reset change token
             self.changeConfirmed = False
-            time.sleep(1.5)
+            time.sleep(2.5)
 
             # find the element and extract the listprice attribute
             design = self.driver.find_element_by_xpath(designs.get(index, "invalid index"))
 
             # add title attribute to config history list
             self.config.append(design.get_attribute("title"))
+
+            # add misc attributes that come with the design package automatically
+            # these remain even if the design is swapped.
+            if index == 0:
+                self.config.append("Satin aluminum line exterior trim")
+            if index == 1:
+                self.config.append("Ambient Lighting")
+            if index == 2:
+                self.config.append("Convenience Package")
+                self.config.append("Park Distance Control")
+
             print(str(design.get_attribute("title")))
             data = design.find_element_by_class_name("byo-rail-option")
             price = data.get_attribute("listprice")
@@ -174,7 +185,7 @@ class SelectItem:
 
             # at this point a pop-up well appear asking to input your zip. close it
             self.close_zip()
-            time.sleep(1.5)
+            time.sleep(2.5)
 
             # declare price attribute
             price = 0
@@ -257,7 +268,7 @@ class SelectItem:
                 10: "//div[@data-index='10']" # 19" M Double-spoke cerium grey wheels - all-season run-flat
             }
 
-            time.sleep(1.5)
+            time.sleep(2.5)
 
             # declare price variable
             price = 0
@@ -272,7 +283,7 @@ class SelectItem:
                 # extract price attribute from the element
                 data = wheel.find_element_by_class_name("byo-rail-option")
                 price = data.get_attribute("listprice")
-                time.sleep(1)
+                time.sleep(2)
 
                 # click element
                 wheel.click()
@@ -285,7 +296,7 @@ class SelectItem:
                 # extract price attribute and record it
                 data = wheel.find_element_by_class_name("byo-rail-option")
                 price = data.get_attribute("listprice")
-                time.sleep(1)
+                time.sleep(2)
 
                 # click element
                 wheel.click()
@@ -312,6 +323,11 @@ class SelectItem:
     def select_upholstery(self, index):
         try:
 
+            # get rid of the default upholstery for luxury design
+
+            if "Black Vernasca Leather with context stitching" in self.config:
+                self.config.remove("Black Vernasca Leather with contrast stitching")
+
             uph_list_330i = {
                 0: "//div[@title='Canberra Beige SensaTec']",
                 1: "//div[@title='Black SensaTec']",
@@ -334,16 +350,17 @@ class SelectItem:
             }
 
             self.changeConfirmed = False
-            time.sleep(1)
+            time.sleep(3)
 
             price = 0
 
+            action(self.driver).send_keys(Keys.PAGE_DOWN)
             # 330i or 330i xDrive
             if self.model == 0 or self.model == 1:
                 # find element and scroll it into view
                 uph = self.driver.find_element_by_xpath(uph_list_330i.get(index, "invalid index"))
 
-                if index > 2:
+                if index > 3:
                     self.driver.execute_script("arguments[0].scrollIntoView();", uph)
                 action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(
                     Keys.UP).perform()  # bring the element into view
@@ -361,7 +378,7 @@ class SelectItem:
                 # find element and scroll it into view
                 uph = self.driver.find_element_by_xpath(uph_list_M340i.get(index, "invalid index"))
 
-                if index > 2:
+                if index > 3:
                     self.driver.execute_script("arguments[0].scrollIntoView();", uph)
 
                 # extract listprice attribute from the element
@@ -408,7 +425,7 @@ class SelectItem:
             # find element and scroll it into view
             trim = self.driver.find_element_by_xpath(trims.get(index, "invalid index"))
 
-            if index > 2:
+            if index > 3:
                 self.driver.execute_script("arguments[0].scrollIntoView();", trim)
 
             # extract listprice attribute from the element
@@ -433,6 +450,7 @@ class SelectItem:
 
             # compare backend total against the total on UI then proceed
             self.check_total()
+            self.config = list(dict.fromkeys(self.config))
             self.next_page()
             self.loadtime()
         except Exception as err:
@@ -473,7 +491,7 @@ class SelectItem:
 
             # add to history
             title = self.driver.find_element_by_class_name("package-modal__name.theme-core.byo-core-type.headline-5")
-            self.config.append(title.text)
+            self.config.append(title.text + " Package")
             print(self.config)
 
             # click the add to build button
@@ -499,6 +517,7 @@ class SelectItem:
             # compare the backend total to the total on the UI
             self.check_total()
             self.loadtime()
+            self.config = list(dict.fromkeys(self.config))
         except Exception as err:
             self.handler.error_message("error selecting featured package", err)
 
@@ -565,10 +584,11 @@ class SelectItem:
             addtobuild = self.driver.find_element_by_class_name(
                 "package-modal__selected-btn.theme-core.byo-core-type.headline-6")
             addtobuild.click()
-            time.sleep(1)
+            time.sleep(5)
             print("Selected additional package. Index: " + str(index))
             self.confirm_change()
 
+            time.sleep(2)
             try:
                 close = self.wait.until(ec.element_to_be_clickable(
                     (By.CLASS_NAME, "close-button")))
@@ -581,6 +601,7 @@ class SelectItem:
 
             self.check_total()
             self.loadtime()
+            self.config = list(dict.fromkeys(self.config))
         except Exception as err:
             self.handler.error_message("error selecting additional package", err)
 
@@ -637,6 +658,11 @@ class SelectItem:
                 time.sleep(1)
                 option.click()
 
+            # add to history
+            title = self.driver.find_element_by_class_name(
+                "detail-modal-title.theme-core.byo-core-type.headline-4")
+
+            price = 0
             # if item is being added
             if add == True:
                 price = self.driver.find_element_by_class_name(
@@ -645,6 +671,7 @@ class SelectItem:
                     (By.CLASS_NAME, "detail-modal-button-add-item.cta-1" )
                 ))
                 addtobuild.click()
+                self.config.append(title.text)
             # else its being removed
             else:
                 price = self.driver.find_element_by_class_name(
@@ -653,11 +680,10 @@ class SelectItem:
                     (By.CLASS_NAME, "detail-modal-button-addi-item.active.cta-1")
                 ))
                 remove.click()
+                self.config.remove(title.text)
 
-            # add to history
-            title = self.driver.find_element_by_class_name(
-                "detail-modal-title.theme-core.byo-core-type.headline-4")
-            self.config.append(title.text)
+
+
             print(self.config)
 
             # close window
@@ -672,14 +698,17 @@ class SelectItem:
             self.confirm_change()
 
             # if no changes are confirmed, calculate the price based on the add boolean
+            # also, append or remove from config list
             if self.changeConfirmed == False:
                 if add == True:
                     self.total = self.total + int(''.join(c for c in price.text if c.isdigit()))
+                    self.config.append(title.text)
                 elif add == False:
                     self.total = self.total - int(''.join(c for c in price.text if c.isdigit()))
+                    self.config.remove(title.text)
 
             self.check_total()
-
+            self.config = list(dict.fromkeys(self.config))
             if self.model == 0 or self.model == 1:
                 self.next_page_dock()
 
@@ -701,6 +730,7 @@ class SelectItem:
                 1: "//button[contains(text(), 'BMW Loading Sill Mat')]"
             }
 
+            self.changeConfirmed = False
             time.sleep(2)
             # 330i or 330i xDrive
             if self.model == 0 or self.model == 1:
@@ -713,27 +743,28 @@ class SelectItem:
                     By.XPATH, accessories_M340i.get(index, "invalid index"))))
                 accessory.click()
 
+            # add to history
+            title = self.driver.find_element_by_class_name(
+                "detail-modal-title.theme-core.byo-core-type.headline-4")
+
             # if item is to be added
             if add == True:
                 addtobuild = self.wait.until(ec.element_to_be_clickable(
                     (By.CLASS_NAME, "detail-modal-button-add-item.cta-1")
                 ))
                 addtobuild.click()
+                self.config.append(title.text)
             # if item is to be removed
             else:
                 remove = self.wait.until(ec.element_to_be_clickable(
                     (By.CLASS_NAME, "detail-modal-button-addi-item.active.cta-1")   # xpath for removal button
                 ))
                 remove.click()
+                self.config.remove(title.text)
 
-            # add to history
-            title = self.driver.find_element_by_class_name(
-                "detail-modal-title.theme-core.byo-core-type.headline-4")
-            self.config.append(title.text)
             print(self.config)
-
             # close the window
-            time.sleep(1)
+            time.sleep(2)
             try:
                 close = self.wait.until(ec.element_to_be_clickable((By.CLASS_NAME, "close-button")))
                 close.click()
@@ -743,9 +774,23 @@ class SelectItem:
             # confirm the change, verify the total and then move to the next page
             print("Selected accessory index: " + str(index))
             self.confirm_change()
+
+            # if no changes are confirmed, calculate the price based on the add boolean
+            # also, append or remove from config list
+            '''
+            if self.changeConfirmed == False:
+                if add == True:
+                    self.total = self.total + int(''.join(c for c in price.text if c.isdigit()))
+                    self.config.append(title.text)
+                elif add == False:
+                    self.total = self.total - int(''.join(c for c in price.text if c.isdigit()))
+                    self.config.remove(title.text)'''
+
             self.check_total()
             self.next_page_dock()
             self.loadtime()
+            self.config = list(dict.fromkeys(self.config))
+            self.verify_summary()
             self.driver.quit()
         except Exception as err:
             self.handler.error_message("error selecting accessories", err)
@@ -766,6 +811,7 @@ class SelectItem:
             self.driver.execute_script("arguments[0].scrollIntoView();", program)
             action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(
                 Keys.UP).perform()  # bring the element into view
+
             time.sleep(1)
             program.click()
 
@@ -775,12 +821,14 @@ class SelectItem:
                     (By.CLASS_NAME, "detail-modal-button-add-item.cta-1")
                 ))
                 addtobuild.click()
+                self.config.append(program.text)
             # if item is to be removed
             else:
                 remove = self.wait.until(ec.element_to_be_clickable(
                     (By.CLASS_NAME, "detail-modal-button-addi-item.active.cta-1")  # xpath for removal button
                 ))
                 remove.click()
+                self.config.remove(program.text)
 
             # close the window
             time.sleep(1)
@@ -794,6 +842,7 @@ class SelectItem:
             print("Selected maintenance program index: " + str(index))
             self.confirm_change()
             self.check_total()
+            self.config = list(dict.fromkeys(self.config))
             self.next_page_dock()
             self.loadtime()
         except Exception as err:
@@ -856,39 +905,88 @@ class SelectItem:
 
     def modify_config(self):
         try:
+            self.config = list(dict.fromkeys(self.config))
             # get list wrapper element
 
             changes = self.driver.find_elements_by_class_name("conflict-modal__item-list") # index 0 - add, 1 - removed
 
-            # get item list - added
-            added = changes[0].find_elements_by_class_name("conflict-modal__row")
-            # for every item to be added
-            for item in added:
-                title = item.find_element_by_class_name(
-                    "conflict-modal__description.byo-col-default-17.byo-core-type.theme-gkl.content-2"
-                )
-                self.config.append(title.text)      # add to config
+            addItems = False
+            removeItems = False
+            # try to find elements that contain "adding/remove" to see what to perform on the config list
+            # sometimes its only adding, only removing, or both, so we need to check before.
+            try:
+                aflag = self.driver.find_element_by_xpath("//section//div//h6[contains(text(), 'adding')]")
+                addItems = True
+            except:
+                addItems = False
 
-            # get item list - removed
-            removed = changes[1].find_elements_by_class_name("conflict-modal__row")
-            for item in removed:
-                title = item.find_element_by_class_name(
-                    "conflict-modal__description.byo-col-default-17.byo-core-type.theme-gkl.content-2"
-                )
-                try:
-                    self.config.remove(title.text)
-                except ValueError:
-                    continue
+            try:
+                rflag = self.driver.find_element_by_xpath("//section//div//h6[contains(text(), 'removing')]")
+                removeItems = True
+            except:
+                removeItems = False
 
+            if addItems is True and removeItems is True:
+                # get item list - added
+                added = changes[0].find_elements_by_class_name("conflict-modal__row")
+                # for every item to be added
+                for item in added:
+                    title = item.find_element_by_class_name(
+                        "conflict-modal__description.byo-col-default-17.byo-core-type.theme-gkl.content-2"
+                    )
+                    self.config.append(title.text)      # add to config
+
+                    # add hidden options exclusive to this
+
+                    # if changing to m sport, add '19" M Double-spoke bi-color jet black wheels
+                    # the config menu says its removing the current wheels but doesnt mention that its adding these.
+                    # glitch?
+                    if title.text == "M Sport":
+                        self.config.append('19" M Double-spoke bi-color jet black wheels, style 791M with performance run-flat tires')
+
+                # get item list - removed
+                removed = changes[1].find_elements_by_class_name("conflict-modal__row")
+                for item in removed:
+                    title = item.find_element_by_class_name(
+                        "conflict-modal__description.byo-col-default-17.byo-core-type.theme-gkl.content-2"
+                    )
+                    try:
+                        self.config.remove(title.text)
+                    except ValueError:
+                        continue
+            elif addItems is True and removeItems is False:
+                # get item list - added
+                added = changes[0].find_elements_by_class_name("conflict-modal__row")
+                # for every item to be added
+                for item in added:
+                    title = item.find_element_by_class_name(
+                        "conflict-modal__description.byo-col-default-17.byo-core-type.theme-gkl.content-2"
+                    )
+                    self.config.append(title.text)  # add to config
+            elif addItems is False and removeItems is True:
+                # get item list - removed
+                removed = changes[0].find_elements_by_class_name("conflict-modal__row")
+                for item in removed:
+                    title = item.find_element_by_class_name(
+                        "conflict-modal__description.byo-col-default-17.byo-core-type.theme-gkl.content-2"
+                    )
+                    try:
+                        self.config.remove(title.text)
+                    except ValueError:
+                        continue
             # remove dupes
             self.config = list(dict.fromkeys(self.config))
+
+            if "Driving Assitance Package" in self.config and "Park Distance Control" in self.config:
+                self.config.remove("Park Distance Control")
+
             print(self.config)
         except Exception as err:
             self.handler.error_message("error modifying config list", err)
     # closes zipcode window - can cause click intercepts if open
     def close_zip(self):
         try:
-            time.sleep(1.5) # wait for the banner to disappear
+            time.sleep(2.5) # wait for the banner to disappear
             # close zip pop-up
             close = self.wait.until(ec.element_to_be_clickable((By.XPATH, "//button[@aria-label='Close Zipcode Modal']")))
             close.click()
@@ -922,3 +1020,51 @@ class SelectItem:
             print("Total is not available on this page.\n")
         except Exception as err:
             self.handler.error_message("error checking total", err)
+
+    # verify summary
+    # compare the items listed on the summary page to the items contained in the config list
+    def verify_summary(self):
+        try:
+            time.sleep(1.5)
+            # get a list of all the item elements on the page
+            items = self.driver.find_elements_by_class_name("build-overview__option-name")
+
+            # get rid of the first and last items in the list, these are not relevant
+            items.pop(0)
+            items.pop(len(items) - 1)
+
+            item_text = []
+            # put text from elements into list
+            for i in items:
+                item_text.append(i.text)
+            # compare with all the items in the config list
+            # compare sizes first, if the sizes are different then obviously something went wrong
+            # possibly another one with gas guzzler? will have to see....
+            # EXCEPTIONS:
+            #  Ambient does not appear on the summary page if Luxury is selected.
+
+            if "Luxury" in self.config and "Ambient Lighting" in self.config:
+                self.config.remove("Ambient Lighting")
+
+            item_text.sort()
+            self.config.sort()
+            valid_summary = True
+            if len(item_text) != len(self.config):
+                print("Summary not accurate!")
+                print("Config size: " + str(len(self.config)) + "Items size: " + str(len(item_text)))
+                print(str(self.config))
+                print("\n" + str(item_text))
+                return
+            else:
+                for el in self.config:
+                    if el not in item_text:
+                        valid_summary = False
+                    else:
+                        continue
+
+
+
+            print("\nSummary verification completed")
+            print("Result: " + str(valid_summary))
+        except Exception as err:
+            self.handler.error_message("Verify Summary", err)
