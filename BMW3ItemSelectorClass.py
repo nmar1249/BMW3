@@ -81,6 +81,8 @@ class SelectItem:
             # find the button of the specified model
             button = self.wait.until(
                 ec.element_to_be_clickable((By.XPATH, models.get(index, "invalid index"))))
+
+            time.sleep(2)
             button.click()
             self.model = index                      # set model to index, so it can get the base price
 
@@ -88,6 +90,7 @@ class SelectItem:
             print("Model selected. Index: " + str(index))
             self.check_total()
             self.loadtime()
+            time.sleep(2)
         except Exception as err:
             print(str(err))
             self.replug(index)
@@ -201,7 +204,7 @@ class SelectItem:
                 #extract list price from element (could be 0 or 550)
                 data = color.find_element_by_class_name("byo-rail-option")
                 price = data.get_attribute("listprice")
-                time.sleep(1)
+                time.sleep(2)
 
                 #click element
                 color.click()
@@ -221,6 +224,7 @@ class SelectItem:
                 # click element
                 color.click()
 
+            time.sleep(2)
             # confirm change (if needed)
             self.confirm_change()
 
@@ -283,7 +287,7 @@ class SelectItem:
                 # extract price attribute from the element
                 data = wheel.find_element_by_class_name("byo-rail-option")
                 price = data.get_attribute("listprice")
-                time.sleep(2)
+                time.sleep(3)
 
                 # click element
                 wheel.click()
@@ -302,6 +306,7 @@ class SelectItem:
                 wheel.click()
 
             print("selected wheel. index: " + str(index))
+            time.sleep(2)
             self.confirm_change()
 
             # calculate total if no additional changes were made
@@ -325,7 +330,7 @@ class SelectItem:
 
             # get rid of the default upholstery for luxury design
 
-            if "Black Vernasca Leather with context stitching" in self.config:
+            if "Black Vernasca Leather with contrast stitching" in self.config:
                 self.config.remove("Black Vernasca Leather with contrast stitching")
 
             uph_list_330i = {
@@ -354,21 +359,22 @@ class SelectItem:
 
             price = 0
 
-            action(self.driver).send_keys(Keys.PAGE_DOWN)
+
             # 330i or 330i xDrive
             if self.model == 0 or self.model == 1:
                 # find element and scroll it into view
                 uph = self.driver.find_element_by_xpath(uph_list_330i.get(index, "invalid index"))
 
-                if index > 3:
+                if index > 2:
                     self.driver.execute_script("arguments[0].scrollIntoView();", uph)
-                action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(
-                    Keys.UP).perform()  # bring the element into view
+
+                    action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(
+                        Keys.UP).perform()  # bring the element into view
 
                 # extract listprice attribute from the element
                 data = uph.find_element_by_class_name("byo-rail-option")
                 price = data.get_attribute("listprice")
-                time.sleep(1)
+                time.sleep(2)
 
                 # click element
                 uph.click()
@@ -378,8 +384,10 @@ class SelectItem:
                 # find element and scroll it into view
                 uph = self.driver.find_element_by_xpath(uph_list_M340i.get(index, "invalid index"))
 
-                if index > 3:
+                if index > 2:
                     self.driver.execute_script("arguments[0].scrollIntoView();", uph)
+                    action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(
+                        Keys.UP).perform()  # bring the element into view
 
                 # extract listprice attribute from the element
                 data = uph.find_element_by_class_name("byo-rail-option")
@@ -485,6 +493,7 @@ class SelectItem:
                 time.sleep(1)
                 f_package.click()
 
+            time.sleep(2)
             # extract listprice attribute
             price = self.driver.find_element_by_class_name("package-modal__price.theme-core.byo-core-type.headline-6")
             time.sleep(1)
@@ -637,7 +646,7 @@ class SelectItem:
                 10: "//button[contains(text(), 'Adaptive M Suspension')]"
             }
 
-            time.sleep(1.5)
+            time.sleep(2.5)
 
             # 330i or 330i xDrive
             if self.model == 0 or self.model == 1:
@@ -645,7 +654,7 @@ class SelectItem:
                 self.driver.execute_script("arguments[0].scrollIntoView();", option)
                 action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(
                     Keys.UP).perform()  # bring the element into view
-                time.sleep(1)
+                time.sleep(2)
                 option.click()
 
             # M#40i or M340i xDrive
@@ -655,7 +664,7 @@ class SelectItem:
                 self.driver.execute_script("arguments[0].scrollIntoView();", option)
                 action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(
                     Keys.UP).perform()  # bring the element into view
-                time.sleep(1)
+                time.sleep(2)
                 option.click()
 
             # add to history
@@ -687,7 +696,7 @@ class SelectItem:
             print(self.config)
 
             # close window
-            time.sleep(1)
+            time.sleep(2)
             try:
                 close = self.driver.find_element_by_class_name("close-button")
                 close.click()
@@ -732,6 +741,7 @@ class SelectItem:
 
             self.changeConfirmed = False
             time.sleep(2)
+
             # 330i or 330i xDrive
             if self.model == 0 or self.model == 1:
                 accessory = self.wait.until(ec.element_to_be_clickable((
@@ -790,8 +800,7 @@ class SelectItem:
             self.next_page_dock()
             self.loadtime()
             self.config = list(dict.fromkeys(self.config))
-            self.verify_summary()
-            self.driver.quit()
+
         except Exception as err:
             self.handler.error_message("error selecting accessories", err)
             self.select_accessories(index, False)
@@ -941,8 +950,9 @@ class SelectItem:
                     # if changing to m sport, add '19" M Double-spoke bi-color jet black wheels
                     # the config menu says its removing the current wheels but doesnt mention that its adding these.
                     # glitch?
-                    if title.text == "M Sport":
-                        self.config.append('19" M Double-spoke bi-color jet black wheels, style 791M with performance run-flat tires')
+
+                    # if title.text == "M Sport":
+                        # self.config.append('19" M Double-spoke bi-color jet black wheels, style 791M with performance run-flat tires')
 
                 # get item list - removed
                 removed = changes[1].find_elements_by_class_name("conflict-modal__row")
@@ -1025,7 +1035,7 @@ class SelectItem:
     # compare the items listed on the summary page to the items contained in the config list
     def verify_summary(self):
         try:
-            time.sleep(1.5)
+            time.sleep(2.5)
             # get a list of all the item elements on the page
             items = self.driver.find_elements_by_class_name("build-overview__option-name")
 
@@ -1034,24 +1044,39 @@ class SelectItem:
             items.pop(len(items) - 1)
 
             item_text = []
+
             # put text from elements into list
             for i in items:
                 item_text.append(i.text)
+
             # compare with all the items in the config list
             # compare sizes first, if the sizes are different then obviously something went wrong
             # possibly another one with gas guzzler? will have to see....
             # EXCEPTIONS:
             #  Ambient does not appear on the summary page if Luxury is selected.
+            #  Park Distance Control and Active Driving Assistant Pro are part of the Driving Assistance Package
 
             if "Luxury" in self.config and "Ambient Lighting" in self.config:
                 self.config.remove("Ambient Lighting")
+
+            if "Driving Assistance Professional Package" in self.config and "Park Distance Control" in self.config:
+                self.config.remove("Park Distance Control")
+
+            if "Driving Assistance Professional Package" in self.config and "Active Driving Assistant Pro" in self.config:
+                self.config.remove("Active Driving Assistant Pro")
+
+            if "Driving Assistance Package" in self.config and "Active Driving Assistant" in self.config:
+                self.config.remove("Active Driving Assistant")
+
+            if "Driving Assistance Package" in self.config and "Park Distance Control" in self.config:
+                self.config.remove("Park Distance Control")
 
             item_text.sort()
             self.config.sort()
             valid_summary = True
             if len(item_text) != len(self.config):
                 print("Summary not accurate!")
-                print("Config size: " + str(len(self.config)) + "Items size: " + str(len(item_text)))
+                print("Config size: " + str(len(self.config)) + " Items size: " + str(len(item_text)))
                 print(str(self.config))
                 print("\n" + str(item_text))
                 return
@@ -1066,5 +1091,72 @@ class SelectItem:
 
             print("\nSummary verification completed")
             print("Result: " + str(valid_summary))
+            self.driver.quit()
         except Exception as err:
             self.handler.error_message("Verify Summary", err)
+
+    def select_accessory_modular(self, add):
+        try:
+            self.driver.get("https://www.bmwusa.com/build-your-own.html#/studio/e0jagts5/accessories")
+            time.sleep(2)
+            acc_list = self.driver.find_elements_by_class_name('option-tile-content')
+
+            index = random.randint(0, len(acc_list) - 1)
+            acc_button = acc_list[index].find_element_by_class_name('option-tile-detail-button.theme-gkl.byo-core-type.label-1')
+            self.driver.execute_script("arguments[0].scrollIntoView();", acc_button)
+            action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(
+                Keys.UP).perform()  # bring the element into view
+
+            acc_button.click()
+
+            # add to history
+            title = self.driver.find_element_by_class_name(
+                "detail-modal-title.theme-core.byo-core-type.headline-4")
+
+            # if item is to be added
+            if add == True:
+                addtobuild = self.wait.until(ec.element_to_be_clickable(
+                    (By.CLASS_NAME, "detail-modal-button-add-item.cta-1")
+                ))
+                addtobuild.click()
+                self.config.append(title.text)
+            # if item is to be removed
+            else:
+                remove = self.wait.until(ec.element_to_be_clickable(
+                    (By.CLASS_NAME, "detail-modal-button-addi-item.active.cta-1")  # xpath for removal button
+                ))
+                remove.click()
+                self.config.remove(title.text)
+
+            print(self.config)
+            # close the window
+            time.sleep(2)
+            try:
+                close = self.wait.until(ec.element_to_be_clickable((By.CLASS_NAME, "close-button")))
+                close.click()
+            except:
+                print("nothing to close")
+
+            # confirm the change, verify the total and then move to the next page
+            print("Selected accessory index: " + str(index))
+            self.confirm_change()
+
+            # if no changes are confirmed, calculate the price based on the add boolean
+            # also, append or remove from config list
+            '''
+            if self.changeConfirmed == False:
+                if add == True:
+                    self.total = self.total + int(''.join(c for c in price.text if c.isdigit()))
+                    self.config.append(title.text)
+                elif add == False:
+                    self.total = self.total - int(''.join(c for c in price.text if c.isdigit()))
+                    self.config.remove(title.text)'''
+
+            self.check_total()
+            self.next_page_dock()
+            self.loadtime()
+            self.config = list(dict.fromkeys(self.config))
+            time.sleep(2)
+        except Exception as err:
+            self.handler.error_message("Accessories - Modular", err)
+            self.select_accessory_modular(False)

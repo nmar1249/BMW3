@@ -77,15 +77,23 @@ class TestScripts:
 
             print("Beginning Test Case A05n6")
             self.auto.select_all_options(random.randint(0, 11), True)  # true = adding item, false = removing item
+            self.auto.select_accessories(0, True)
 
-            if self.auto.model == 0:
-                self.auto.select_accessories(0, True)
-
-            self.auto.verify_summary()
             print("Test A05n6 has finished executing with no issues.")
         except Exception as err:
             self.handler.error_message("A05n6", err)
 
+    def Test_X(self):
+        self.auto.select_accessory_modular(True)
+
+    def Test_A07(self):
+        try:
+            self.Test_A05n6()
+            print("Beginning Test Case A07")
+            self.auto.verify_summary()
+            print("Test A07 has finished executing")
+        except Exception as err:
+            self.handler.error_message("A07", err)
 
     # BEGIN M340i TEST CASES
 
@@ -161,6 +169,16 @@ class TestScripts:
             print("Test B05 has finished executing with no issues.")
         except Exception as err:
             self.handler.error_message("B06", err)
+
+    def Test_B07(self):
+        try:
+            self.Test_B06()
+
+            print("Beginning Test Case B07")
+            self.auto.verify_summary()
+            print("Test B07 has finished executing.")
+        except Exception as err:
+            self.handler.error_message("B07", err)
 '''
 
     define class variables
