@@ -77,7 +77,7 @@ class TestScripts:
 
             print("Beginning Test Case A05n6")
             self.auto.select_all_options(random.randint(0, 11), True)  # true = adding item, false = removing item
-            self.auto.select_accessories(0, True)
+            self.auto.select_accessory_modular(True)
 
             print("Test A05n6 has finished executing with no issues.")
         except Exception as err:

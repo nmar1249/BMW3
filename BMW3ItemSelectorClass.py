@@ -78,6 +78,11 @@ class SelectItem:
             # maximize window
             self.driver.maximize_window()
 
+            action(self.driver).send_keys(Keys.PAGE_DOWN).perform()
+
+            action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(
+                Keys.UP).perform()
+
             # find the button of the specified model
             button = self.wait.until(
                 ec.element_to_be_clickable((By.XPATH, models.get(index, "invalid index"))))
@@ -364,7 +369,7 @@ class SelectItem:
             if self.model == 0 or self.model == 1:
                 # find element and scroll it into view
                 uph = self.driver.find_element_by_xpath(uph_list_330i.get(index, "invalid index"))
-
+                action(self.driver).send_keys(Keys.PAGE_DOWN).perform()
                 if index > 2:
                     self.driver.execute_script("arguments[0].scrollIntoView();", uph)
 
@@ -1097,7 +1102,6 @@ class SelectItem:
 
     def select_accessory_modular(self, add):
         try:
-            self.driver.get("https://www.bmwusa.com/build-your-own.html#/studio/e0jagts5/accessories")
             time.sleep(2)
             acc_list = self.driver.find_elements_by_class_name('option-tile-content')
 
@@ -1160,3 +1164,43 @@ class SelectItem:
         except Exception as err:
             self.handler.error_message("Accessories - Modular", err)
             self.select_accessory_modular(False)
+
+    '''
+    class variable:
+    attempts = 0
+    
+    def get_into_view(bool, up_count, down_count):  # get_into_view(False, 1, 1)
+    
+    up = bool (True or false, up or down)
+    up_count = int (amount of times to loop send_keys(Keys.UP)
+    down_count = int (Amount of times to loop send_keys(Keys.DOWN)
+    
+    if up is true:                                              
+    
+        i = 0
+        while i is less than up_count:                          # send the UP key the amount of times specified by 
+            send_keys(Keys.UP)                                  # up_count
+            i = i + 1
+        try:
+            click element
+        except click interception:
+            up_count = up_count + 1                              # increase the number of times to move up on the next attempt
+            attempts = attempts + 1                              # increase attempts
+            if attempts < 10:
+                get_into_view(False, up_count, down_count)            # attempt to move down
+                
+    elif up is false: (going down)
+    
+        i = 0
+        while i is less than down_count:
+            send_keys(Keys.DOWN)
+            i = i + 1
+        try:
+            click element
+        except click interception:
+            down_count = down_count + 1
+            attempts = attempts + 1
+            if attempts < 10:
+                get_into_view(True, up_count, down_count)
+    
+    '''

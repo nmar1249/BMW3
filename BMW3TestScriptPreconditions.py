@@ -26,7 +26,8 @@ class preconditions:
 
 # sandbox testing
 test = preconditions
-test.scripts.Test_X()
+test.scripts.Test_A07()
+
 
 '''
 begin _TestScripts:
