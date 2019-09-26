@@ -27,7 +27,8 @@ class TestScripts:
             print("Beginning Test Case A01")
             self.auto.select_model(random.randint(0, 1))           # 330i or 330i xDrive
             self.auto.select_design_330i(random.randint(0, 2))     # design is only available for 330i(xDrive) models
-            print("Test A01 has finished executing with no issues.")
+            print("Test A01 has finished executing.")
+            print("Error Count, Design: " + str(self.auto.design_errors))
         except Exception as err:
             self.handler.error_message("A01", err)
 
@@ -40,7 +41,9 @@ class TestScripts:
             print("Beginning Test Case A02")
             self.auto.select_color(random.randint(0, 11)) # randomize paint color
             self.auto.select_wheels(random.randint(0, 7)) # randomize wheel type
-            print("Test A02 has finished executing with no issues.")
+            print("Test A02 has finished executing.")
+            print("Error Count, Color: " + str(self.auto.color_errors))
+            print("Error Count, Wheel: " + str(self.auto.wheel_errors))
         except Exception as err:
             self.handler.error_message("A02", err)
 
@@ -54,7 +57,9 @@ class TestScripts:
             print("Beginning Test Case A03")
             self.auto.select_upholstery(random.randint(0, 8)) # select random upholstery style
             self.auto.select_trim(random.randint(0, 4))       # select random trim style
-            print("Test A03 has finished executing with no issues.")
+            print("Test A03 has finished executing.")
+            print("Error Count, Uph: " + str(self.auto.uph_errors))
+            print("Error Count, Trim: " + str(self.auto.trim_errors))
         except Exception as err:
             self.handler.error_message("A03", err)
 
@@ -66,7 +71,10 @@ class TestScripts:
             print("Beginning Test Case A04")
             self.auto.select_featured_package(random.randint(0, 2))
             self.auto.select_additional_packages(random.randint(0, 3))
-            print("Test A04 has finished executing with no issues.")
+            print("Test A04 has finished executing.")
+            print("Error Count, FP: " + str(self.auto.fp_errors))
+            print("Error Count, AP: " + str(self.auto.ap_errors))
+
         except Exception as err:
             self.handler.error_message("A04", err)
 
@@ -78,20 +86,18 @@ class TestScripts:
             print("Beginning Test Case A05n6")
             self.auto.select_all_options(random.randint(0, 11), True)  # true = adding item, false = removing item
             self.auto.select_accessory_modular(True)
-
-            print("Test A05n6 has finished executing with no issues.")
+            print("Test A05n6 has finished executing.")
+            print("Error Count, Op: " + str(self.auto.op_errors))
+            print("Error Count, Acc: " + str(self.auto.ac_errors))
         except Exception as err:
             self.handler.error_message("A05n6", err)
-
-    def Test_X(self):
-        self.auto.select_accessory_modular(True)
 
     def Test_A07(self):
         try:
             self.Test_A05n6()
             print("Beginning Test Case A07")
             self.auto.verify_summary()
-            print("Test A07 has finished executing")
+            print("Test A07 has finished executing.")
         except Exception as err:
             self.handler.error_message("A07", err)
 
@@ -107,7 +113,9 @@ class TestScripts:
             self.auto.select_model(random.randint(2, 3))  # M340i or M340i xDrive
             self.auto.select_color(random.randint(0, 7)) # randomize paint color
             self.auto.select_wheels(random.randint(0, 10)) # randomize wheel type
-            print("Test B01 has finished executing with no issues.")
+            print("Test B01 has finished executing.")
+            print("Error Count, Color: " + str(self.auto.color_errors))
+            print("Error Count, Wheel: " + str(self.auto.wheel_errors))
         except Exception as err:
             self.handler.error_message("B01", err)
 
@@ -121,7 +129,10 @@ class TestScripts:
             print("Beginning Test Case B02")
             self.auto.select_upholstery(random.randint(0, 5)) # select random upholstery style
             self.auto.select_trim(random.randint(0, 4))       # select random trim style
-            print("Test B02 has finished executing with no issues.")
+            print("Test B02 has finished executing.")
+            print("Error Count, Uph: " + str(self.auto.uph_errors))
+            print("Error Count, Trim: " + str(self.auto.trim_errors))
+
         except Exception as err:
             self.handler.error_message("B02", err)
 
@@ -133,7 +144,9 @@ class TestScripts:
             print("Beginning Test Case B03")
             self.auto.select_featured_package(random.randint(0, 1))
             self.auto.select_additional_packages(random.randint(0, 3))
-            print("Test B03 has finished executing with no issues.")
+            print("Test B03 has finished executing.")
+            print("Error Count, FP: " + str(self.auto.fp_errors))
+            print("Error Count, AP: " + str(self.auto.ap_errors))
         except Exception as err:
             self.handler.error_message("B03", err)
 
@@ -144,7 +157,8 @@ class TestScripts:
 
             print("Beginning Test Case B04")
             self.auto.select_all_options(random.randint(0, 10), True)  # true = adding item, false = removing item
-            print("Test B04 has finished executing with no issues.")
+            print("Test B04 has finished executing.")
+            print("Error Count: " + str(self.auto.op_errors))
         except Exception as err:
             self.handler.error_message("B04", err)
 
@@ -155,7 +169,8 @@ class TestScripts:
 
             print("Beginning Test Case B05")
             self.auto.select_maintenance_program(random.randint(0, 4), True)
-            print("Test B05 has finished executing with no issues.")
+            print("Test B05 has finished executing.")
+            print("Error Count: " + str(self.auto.mp_errors))
         except Exception as err:
             self.handler.error_message("B05", err)
 
@@ -165,8 +180,9 @@ class TestScripts:
             self.Test_B05()
 
             print("Beginning Test Case B06")
-            self.auto.select_accessories(random.randint(0, 1), True)
-            print("Test B05 has finished executing with no issues.")
+            self.auto.select_accessory_modular(True)
+            print("Test B06 has finished executing.")
+            print("Error Count: " + str(self.auto.ac_errors))
         except Exception as err:
             self.handler.error_message("B06", err)
 
@@ -179,6 +195,25 @@ class TestScripts:
             print("Test B07 has finished executing.")
         except Exception as err:
             self.handler.error_message("B07", err)
+
+    def Test_Summary(self):
+        try:
+            print("\n-TEST SUITE SUMMARY-\n")
+            print("- Error Count -\n")
+            print("Model:\t\t\t\t\t" + str(self.auto.model_errors))
+            print("Design:\t\t\t\t\t" + str(self.auto.design_errors))
+            print("Color:\t\t\t\t\t" + str(self.auto.color_errors))
+            print("Wheel:\t\t\t\t\t" + str(self.auto.wheel_errors))
+            print("Upholstery:\t\t\t\t" + str(self.auto.uph_errors))
+            print("Trim:\t\t\t\t\t" + str(self.auto.trim_errors))
+            print("F. Package:\t\t\t\t" + str(self.auto.fp_errors))
+            print("A. Package:\t\t\t\t" + str(self.auto.ap_errors))
+            print("Options:\t\t\t\t" + str(self.auto.op_errors))
+            print("Accessories:\t\t\t" + str(self.auto.ac_errors))
+            print("Maintenance Program:\t" + str(self.auto.mp_errors))
+
+        except Exception as err:
+            self.handler.error_message("Test Summary", err)
 '''
 
     define class variables

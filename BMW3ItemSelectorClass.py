@@ -20,6 +20,7 @@ from selenium.common.exceptions import ElementClickInterceptedException
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import  NoSuchElementException
+from selenium.common.exceptions import StaleElementReferenceException
 
 import time
 import random
@@ -31,6 +32,18 @@ class SelectItem:
     wait = WebDriverWait
     handler = ErrorHandler
     model = ""
+
+    model_errors = 0
+    design_errors = 0
+    color_errors = 0
+    wheel_errors = 0
+    uph_errors = 0
+    trim_errors = 0
+    fp_errors = 0       # featued packages
+    ap_errors = 0       # additional packages
+    op_errors = 0       # options
+    ac_errors = 0       # accessories
+    mp_errors = 0       # maintenance packages
 
     changeConfirmed = False
 
@@ -77,17 +90,10 @@ class SelectItem:
 
             # maximize window
             self.driver.maximize_window()
-
-            action(self.driver).send_keys(Keys.PAGE_DOWN).perform()
-
-            action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(
-                Keys.UP).perform()
-
             # find the button of the specified model
             button = self.wait.until(
                 ec.element_to_be_clickable((By.XPATH, models.get(index, "invalid index"))))
 
-            time.sleep(2)
             button.click()
             self.model = index                      # set model to index, so it can get the base price
 
@@ -116,7 +122,7 @@ class SelectItem:
 
             # reset change token
             self.changeConfirmed = False
-            time.sleep(2.5)
+            time.sleep(1.5)
 
             # find the element and extract the listprice attribute
             design = self.driver.find_element_by_xpath(designs.get(index, "invalid index"))
@@ -146,6 +152,7 @@ class SelectItem:
             # the element itself; which is why here next_page is called before confirmed_change, but isnt
             # elsewhere.
             self.next_page()
+            time.sleep(1)
             self.confirm_change()
 
             if self.changeConfirmed == False:
@@ -154,7 +161,19 @@ class SelectItem:
             self.check_total()
             self.loadtime()
         except Exception as err:
-            self.handler.error_message("330i - design", err)
+            self.design_errors = self.design_errors + 1
+            self.handler.error_message("design", err)
+
+            if self.design_errors < 3:
+                print("Attempting to run again...")
+                self.driver.refresh()
+                time.sleep(1)
+                self.close_zip()
+                self.select_design_330i(index)
+            else:
+                print("Error limit reached. Moving on...")
+                self.driver.refresh()
+                self.next_page()
 
     # select a paint job in the configurator
     def select_color(self, index):
@@ -192,8 +211,8 @@ class SelectItem:
             self.changeConfirmed = False
 
             # at this point a pop-up well appear asking to input your zip. close it
+            time.sleep(1)
             self.close_zip()
-            time.sleep(2.5)
 
             # declare price attribute
             price = 0
@@ -229,7 +248,7 @@ class SelectItem:
                 # click element
                 color.click()
 
-            time.sleep(2)
+            time.sleep(1)
             # confirm change (if needed)
             self.confirm_change()
 
@@ -239,7 +258,6 @@ class SelectItem:
 
             title = self.driver.find_element_by_class_name("byo-rail-option-base.selected")
             self.config.append(title.get_attribute("title"))
-            print(self.config)
 
             # verify that the total is properly displayed then move on to the next page
             self.check_total()
@@ -247,7 +265,19 @@ class SelectItem:
             print("Color selected. Index:\t" + str(index))
             self.loadtime()
         except Exception as err:
+            self.color_errors = self.color_errors + 1
             self.handler.error_message("color selection", err)
+
+            if self.color_errors < 3:
+                print("Attempting to run again...")
+                self.driver.refresh()
+                time.sleep(1)
+                self.close_zip()
+                self.select_color(index)
+            else:
+                print("Error limit reached. Moving on...")
+                self.driver.refresh()
+                self.next_page()
 
     def select_wheels(self, index):
         try:
@@ -320,14 +350,25 @@ class SelectItem:
 
             title = self.driver.find_element_by_class_name("byo-rail-option-base.selected")
             self.config.append(title.get_attribute("title"))
-            print(self.config)
 
             # verify total and move on to the next page
             self.check_total()
             self.next_page()
             self.loadtime()
         except Exception as err:
+            self.wheel_errors = self.wheel_errors + 1
             self.handler.error_message("error selecting wheels", err)
+
+            if self.wheel_errors < 3:
+                print("Attempting to run again...")
+                self.driver.refresh()
+                time.sleep(1)
+                self.close_zip()
+                self.select_wheels(index)
+            else:
+                print("Error limit reached. Moving on...")
+                self.driver.refresh()
+                self.next_page()
 
     # select upholestry for the 3-series sedan variants
     def select_upholstery(self, index):
@@ -360,7 +401,7 @@ class SelectItem:
             }
 
             self.changeConfirmed = False
-            time.sleep(3)
+            time.sleep(1.5)
 
             price = 0
 
@@ -369,17 +410,16 @@ class SelectItem:
             if self.model == 0 or self.model == 1:
                 # find element and scroll it into view
                 uph = self.driver.find_element_by_xpath(uph_list_330i.get(index, "invalid index"))
-                action(self.driver).send_keys(Keys.PAGE_DOWN).perform()
-                if index > 2:
+                if index > 3:
                     self.driver.execute_script("arguments[0].scrollIntoView();", uph)
 
                     action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(
-                        Keys.UP).perform()  # bring the element into view
+                        Keys.UP).send_keys(Keys.UP).send_keys(Keys.UP).perform()  # bring the element into view
 
                 # extract listprice attribute from the element
                 data = uph.find_element_by_class_name("byo-rail-option")
                 price = data.get_attribute("listprice")
-                time.sleep(2)
+                time.sleep(1)
 
                 # click element
                 uph.click()
@@ -388,11 +428,10 @@ class SelectItem:
             elif self.model == 2 or self.model == 3:
                 # find element and scroll it into view
                 uph = self.driver.find_element_by_xpath(uph_list_M340i.get(index, "invalid index"))
-
-                if index > 2:
+                if index > 3:
                     self.driver.execute_script("arguments[0].scrollIntoView();", uph)
                     action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(
-                        Keys.UP).perform()  # bring the element into view
+                        Keys.UP).send_keys(Keys.UP).perform()  # bring the element into view
 
                 # extract listprice attribute from the element
                 data = uph.find_element_by_class_name("byo-rail-option")
@@ -412,14 +451,25 @@ class SelectItem:
 
             title = self.driver.find_element_by_class_name("byo-rail-option-base.selected")
             self.config.append(title.get_attribute("title"))
-            print(self.config)
 
             # compare the backend total against the total on the UI
             self.check_total()
             self.next_page()
             self.loadtime()
         except Exception as err:
+            self.uph_errors = self.uph_errors + 1
             self.handler.error_message("error selecting upholstery", err)
+
+            if self.uph_errors < 3:
+                print("Attempting to run again...")
+                self.driver.refresh()
+                time.sleep(1)
+                self.close_zip()
+                self.select_upholstery(index)
+            else:
+                print("Error limit reached. Moving on...")
+                self.driver.refresh()
+                self.next_page()
 
     # same for 330i and M340i
     def select_trim(self, index):
@@ -459,7 +509,6 @@ class SelectItem:
 
             title = self.driver.find_element_by_class_name("byo-rail-option-base.selected")
             self.config.append(title.get_attribute("title"))
-            print(self.config)
 
             # compare backend total against the total on UI then proceed
             self.check_total()
@@ -467,7 +516,19 @@ class SelectItem:
             self.next_page()
             self.loadtime()
         except Exception as err:
+            self.trim_errors = self.trim_errors + 1
             self.handler.error_message("error selecting trim", err)
+
+            if self.trim_errors < 3:
+                print("Attempting to run again...")
+                self.driver.refresh()
+                time.sleep(1)
+                self.close_zip()
+                self.select_trim(index)
+            else:
+                print("Error limit reached. Moving on...")
+                self.driver.refresh()
+                self.next_page()
 
     def select_featured_package(self, index):
         try:
@@ -483,7 +544,6 @@ class SelectItem:
             }
 
             self.changeConfirmed = False
-            time.sleep(1)
 
             # 330i or 330i xDrive
             if self.model == 0 or self.model == 1:
@@ -498,7 +558,7 @@ class SelectItem:
                 time.sleep(1)
                 f_package.click()
 
-            time.sleep(2)
+            time.sleep(1)
             # extract listprice attribute
             price = self.driver.find_element_by_class_name("package-modal__price.theme-core.byo-core-type.headline-6")
             time.sleep(1)
@@ -506,7 +566,6 @@ class SelectItem:
             # add to history
             title = self.driver.find_element_by_class_name("package-modal__name.theme-core.byo-core-type.headline-5")
             self.config.append(title.text + " Package")
-            print(self.config)
 
             # click the add to build button
             addtobuild = self.driver.find_element_by_class_name(
@@ -532,8 +591,21 @@ class SelectItem:
             self.check_total()
             self.loadtime()
             self.config = list(dict.fromkeys(self.config))
+        except StaleElementReferenceException:
+            print("Stale Element, moving on..")
         except Exception as err:
+            self.fp_errors = self.fp_errors + 1
             self.handler.error_message("error selecting featured package", err)
+
+            if self.fp_errors < 3:
+                print("Attempting to run again...")
+                self.driver.refresh()
+                time.sleep(1)
+                self.close_zip()
+                self.select_featured_package(index)
+            else:
+                print("Error limit reached. Moving on...")
+                self.driver.refresh()
 
     def select_additional_packages(self, index):
         try:
@@ -592,13 +664,12 @@ class SelectItem:
             # add to history
             title = self.driver.find_element_by_class_name("package-modal__name.theme-core.byo-core-type.headline-5")
             self.config.append(title.text)
-            print(self.config)
 
             # click add to build
             addtobuild = self.driver.find_element_by_class_name(
                 "package-modal__selected-btn.theme-core.byo-core-type.headline-6")
             addtobuild.click()
-            time.sleep(5)
+            time.sleep(2)
             print("Selected additional package. Index: " + str(index))
             self.confirm_change()
 
@@ -616,8 +687,21 @@ class SelectItem:
             self.check_total()
             self.loadtime()
             self.config = list(dict.fromkeys(self.config))
+        except StaleElementReferenceException:
+            print("Stale element, moving on..")
         except Exception as err:
+            self.ap_errors = self.ap_errors + 1
             self.handler.error_message("error selecting additional package", err)
+
+            if self.ap_errors < 3:
+                print("Attempting to run again...")
+                self.driver.refresh()
+                time.sleep(1)
+                self.close_zip()
+                self.select_additional_packages(index)
+            else:
+                print("Error limit reached. Moving on...")
+                self.driver.refresh()
 
     # add is a boolean variable that determines whether an item is being added (true) or removed (false)
     def select_all_options(self, index, add):
@@ -651,7 +735,7 @@ class SelectItem:
                 10: "//button[contains(text(), 'Adaptive M Suspension')]"
             }
 
-            time.sleep(2.5)
+            time.sleep(1.5)
 
             # 330i or 330i xDrive
             if self.model == 0 or self.model == 1:
@@ -659,7 +743,7 @@ class SelectItem:
                 self.driver.execute_script("arguments[0].scrollIntoView();", option)
                 action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(
                     Keys.UP).perform()  # bring the element into view
-                time.sleep(2)
+                time.sleep(1)
                 option.click()
 
             # M#40i or M340i xDrive
@@ -669,7 +753,7 @@ class SelectItem:
                 self.driver.execute_script("arguments[0].scrollIntoView();", option)
                 action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(
                     Keys.UP).perform()  # bring the element into view
-                time.sleep(2)
+                time.sleep(1)
                 option.click()
 
             # add to history
@@ -697,11 +781,8 @@ class SelectItem:
                 self.config.remove(title.text)
 
 
-
-            print(self.config)
-
             # close window
-            time.sleep(2)
+            time.sleep(1)
             try:
                 close = self.driver.find_element_by_class_name("close-button")
                 close.click()
@@ -728,9 +809,27 @@ class SelectItem:
 
             self.loadtime()
         except Exception as err:
+            self.op_errors = self.op_errors + 1
             self.handler.error_message("error selecting options", err)
-            self.select_all_options(index, False) # perhaps it needs to be removed, try that.
 
+            if self.op_errors < 3:
+                print("Attempting to run again...")
+
+                # try to remove if error occured while adding or vice-versa
+                if add is False:
+                    add = True
+                elif add is True:
+                    add = False
+
+                self.driver.refresh()
+                time.sleep(1)
+                self.select_all_options(index, add)  # perhaps it needs to be removed, try that.
+            else:
+                print("Error limit reached. Moving on...")
+                self.driver.refresh()
+                self.close_zip()
+                if self.model is 0 or self.model is 1:
+                    self.next_page_dock()
 
     # choose accessories for the vehicle configurator
     def select_accessories(self, index, add):
@@ -745,7 +844,6 @@ class SelectItem:
             }
 
             self.changeConfirmed = False
-            time.sleep(2)
 
             # 330i or 330i xDrive
             if self.model == 0 or self.model == 1:
@@ -777,9 +875,7 @@ class SelectItem:
                 remove.click()
                 self.config.remove(title.text)
 
-            print(self.config)
             # close the window
-            time.sleep(2)
             try:
                 close = self.wait.until(ec.element_to_be_clickable((By.CLASS_NAME, "close-button")))
                 close.click()
@@ -807,8 +903,26 @@ class SelectItem:
             self.config = list(dict.fromkeys(self.config))
 
         except Exception as err:
+            self.ac_errors = self.ac_errors + 1
             self.handler.error_message("error selecting accessories", err)
-            self.select_accessories(index, False)
+
+            if self.ac_errors < 3:
+                print("Attempting to run again...")
+
+                # try to remove if error occured while adding or vice-versa
+                if add is False:
+                    add = True
+                elif add is True:
+                    add = False
+
+                self.driver.refresh()
+                time.sleep(1)
+                self.select_accessories(index, add)  # perhaps it needs to be removed, try that.
+            else:
+                print("Error limit reached. Moving on...")
+                self.driver.refresh()
+                self.close_zip()
+                self.next_page_dock()
 
     def select_maintenance_program(self, index, add):
         try:
@@ -820,17 +934,17 @@ class SelectItem:
                 4: "//button[contains(text(), 'BMW Ultimate Care+ 4 Bundle')]"
             }
 
+            time.sleep(1)
             program = self.wait.until(
                 ec.element_to_be_clickable((By.XPATH, programs.get(index, "invalid index"))))
             self.driver.execute_script("arguments[0].scrollIntoView();", program)
             action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(
                 Keys.UP).perform()  # bring the element into view
-
             time.sleep(1)
             program.click()
 
             # if item is to be added
-            if add == True:
+            if add is True:
                 addtobuild = self.wait.until(ec.element_to_be_clickable(
                     (By.CLASS_NAME, "detail-modal-button-add-item.cta-1")
                 ))
@@ -860,8 +974,26 @@ class SelectItem:
             self.next_page_dock()
             self.loadtime()
         except Exception as err:
-            self.select_maintenance_program(index, False)
+            self.mp_errors = self.mp_errors + 1
             self.handler.error_message("error selecting maintenace program", err)
+
+            if self.mp_errors < 3:
+                print("Attempting to run again...")
+
+                # try to remove if error occured while adding or vice-versa
+                if add is False:
+                    add = True
+                elif add is True:
+                    add = False
+
+                self.driver.refresh()
+                time.sleep(1)
+                self.close_zip()
+                self.select_maintenance_program(index, add)  # perhaps it needs to be removed, try that.
+            else:
+                print("Error limit reached. Moving on...")
+                self.driver.refresh()
+                self.next_page_dock()
 
     # go to the next page in the configurator
     def next_page(self):
@@ -889,7 +1021,7 @@ class SelectItem:
     # items are shown on the screen.
     def confirm_change(self):
         try:
-            time.sleep(1.5)
+            time.sleep(1)
             #get the net value of the change
             nc_element = self.driver.find_element_by_class_name("conflict-modal__value.byo-core-type.theme-gkl.label-1")
             netChange = nc_element.text
@@ -995,13 +1127,12 @@ class SelectItem:
             if "Driving Assitance Package" in self.config and "Park Distance Control" in self.config:
                 self.config.remove("Park Distance Control")
 
-            print(self.config)
         except Exception as err:
             self.handler.error_message("error modifying config list", err)
     # closes zipcode window - can cause click intercepts if open
     def close_zip(self):
         try:
-            time.sleep(2.5) # wait for the banner to disappear
+            time.sleep(1) # wait for the banner to disappear
             # close zip pop-up
             close = self.wait.until(ec.element_to_be_clickable((By.XPATH, "//button[@aria-label='Close Zipcode Modal']")))
             close.click()
@@ -1040,7 +1171,7 @@ class SelectItem:
     # compare the items listed on the summary page to the items contained in the config list
     def verify_summary(self):
         try:
-            time.sleep(2.5)
+            time.sleep(1)
             # get a list of all the item elements on the page
             items = self.driver.find_elements_by_class_name("build-overview__option-name")
 
@@ -1049,6 +1180,7 @@ class SelectItem:
             items.pop(len(items) - 1)
 
             item_text = []
+            nv_list = []        # store elements that are found on the config but not visible on summary
 
             # put text from elements into list
             for i in items:
@@ -1089,6 +1221,7 @@ class SelectItem:
                 for el in self.config:
                     if el not in item_text:
                         valid_summary = False
+                        nv_list.append(el)
                     else:
                         continue
 
@@ -1096,13 +1229,15 @@ class SelectItem:
 
             print("\nSummary verification completed")
             print("Result: " + str(valid_summary))
+            if valid_summary is False:
+                print("Items not found on summary:\n")
+                print(nv_list)
             self.driver.quit()
         except Exception as err:
             self.handler.error_message("Verify Summary", err)
 
     def select_accessory_modular(self, add):
         try:
-            time.sleep(2)
             acc_list = self.driver.find_elements_by_class_name('option-tile-content')
 
             index = random.randint(0, len(acc_list) - 1)
@@ -1111,6 +1246,7 @@ class SelectItem:
             action(self.driver).send_keys(Keys.UP).send_keys(Keys.UP).send_keys(
                 Keys.UP).perform()  # bring the element into view
 
+            time.sleep(1)
             acc_button.click()
 
             # add to history
@@ -1132,9 +1268,8 @@ class SelectItem:
                 remove.click()
                 self.config.remove(title.text)
 
-            print(self.config)
             # close the window
-            time.sleep(2)
+            time.sleep(1)
             try:
                 close = self.wait.until(ec.element_to_be_clickable((By.CLASS_NAME, "close-button")))
                 close.click()
@@ -1160,11 +1295,25 @@ class SelectItem:
             self.next_page_dock()
             self.loadtime()
             self.config = list(dict.fromkeys(self.config))
-            time.sleep(2)
         except Exception as err:
+            self.ac_errors = self.ac_errors + 1
             self.handler.error_message("Accessories - Modular", err)
-            self.select_accessory_modular(False)
 
+            if self.ac_errors < 3:
+                print("Attempting to run again...")
+
+                # try to remove if error occured while adding or vice-versa
+                if add is False:
+                    add = True
+                elif add is True:
+                    add = False
+
+                self.driver.refresh()
+                time.sleep(1)
+                self.close_zip()
+                self.select_accessory_modular(add)  # perhaps it needs to be removed, try that.
+            else:
+                print("Error limit reached. Exiting...")
     '''
     class variable:
     attempts = 0

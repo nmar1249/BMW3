@@ -27,6 +27,7 @@ class preconditions:
 # sandbox testing
 test = preconditions
 test.scripts.Test_A07()
+test.scripts.Test_Summary()
 
 
 '''
